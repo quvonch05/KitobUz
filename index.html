@@ -1,0 +1,2813 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KitobUz — Onlayn Kitoblar Katalogi, Mutolaa va Aqlli Qidiruv Tizimi</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Mammoth.js (.docx Word hujjatlarni ichki o'qish uchun) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* =====================================================================
+       1. HIGH-CONTRAST WARM EDITORIAL DAY MODE & DEEP OBSIDIAN NIGHT MODE
+       ===================================================================== */
+    :root {
+      --bg-canvas: #F3EFE6;         /* Warm Editorial Paper — ko'zni charchatmaydi */
+      --bg-elevated: #FAF7F0;       /* Yumshoq krem panel foni */
+      --bg-card: #FFFFFF;           /* Toza kitob kartochkasi */
+      --bg-input: #EFECE4;          /* Qidiruv va input foni */
+      --text-primary: #0F172A;      /* To'q siyohrang asosiy yozuv (AAA kontrast) */
+      --text-secondary: #334155;    /* Aniq ko'rinadigan ikkilamchi matn */
+      --text-muted: #64748B;        /* Yordamchi yozuvlar */
+      --border-subtle: #DCD5C7;     /* Iliq qog'oz chegarasi */
+      --border-strong: #C4B9A5;
+      --accent-primary: #0284C7;
+      --accent-secondary: #4F46E5;
+      --card-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --stage-bg: radial-gradient(circle at 50% 52%, #E5DFD2 0%, #D6CFC0 90%);
+    }
+
+    html.dark {
+      --bg-canvas: #090D16;         /* Deep Obsidian Night */
+      --bg-elevated: #111827;
+      --bg-card: #151F32;
+      --bg-input: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --border-strong: rgba(56, 189, 248, 0.32);
+      --accent-primary: #38BDF8;
+      --accent-secondary: #818CF8;
+      --card-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.65);
+      --stage-bg: radial-gradient(circle at 50% 54%, rgba(30, 44, 74, 0.78) 0%, rgba(10, 14, 24, 0.96) 90%);
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease;
+      overflow-x: hidden;
+    }
+
+    /* Universal Adaptive Surfaces */
+    .surface-panel {
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--card-shadow);
+    }
+
+    .surface-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--card-shadow);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .surface-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-primary);
+    }
+
+    .surface-input {
+      background-color: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+    }
+
+    .surface-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .text-main { color: var(--text-primary); }
+    .text-sub { color: var(--text-secondary); }
+    .text-mute { color: var(--text-muted); }
+
+    /* High-Contrast Adaptive Badges (Day & Night) */
+    .badge-lang {
+      background-color: #E2E8F0;
+      color: #1E293B;
+      border: 1px solid #CBD5E1;
+      font-weight: 700;
+    }
+    html.dark .badge-lang {
+      background-color: rgba(30, 41, 59, 0.9);
+      color: #E2E8F0;
+      border-color: rgba(148, 163, 184, 0.25);
+    }
+
+    .badge-audio {
+      background-color: #E0F2FE;
+      color: #0369A1;
+      border: 1px solid #7DD3FC;
+      font-weight: 700;
+    }
+    html.dark .badge-audio {
+      background-color: rgba(14, 165, 233, 0.16);
+      color: #38BDF8;
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .badge-pdf {
+      background-color: #FFE4E6;
+      color: #BE123C;
+      border: 1px solid #FDA4AF;
+      font-weight: 700;
+    }
+    html.dark .badge-pdf {
+      background-color: rgba(244, 63, 94, 0.16);
+      color: #FB7185;
+      border-color: rgba(251, 113, 133, 0.35);
+    }
+
+    .badge-word {
+      background-color: #E0E7FF;
+      color: #3730A3;
+      border: 1px solid #A5B4FC;
+      font-weight: 700;
+    }
+    html.dark .badge-word {
+      background-color: rgba(99, 102, 241, 0.16);
+      color: #818CF8;
+      border-color: rgba(129, 140, 248, 0.35);
+    }
+
+    /* 3D Tilted Book Stage & Object */
+    .book-3d-stage {
+      perspective: 850px;
+      background: var(--stage-bg);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .book-3d {
+      width: 108px;
+      height: 154px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateY(-20deg) rotateX(6deg) rotateZ(-4deg);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+      border-radius: 4px 8px 8px 4px;
+      box-shadow: -12px 14px 24px rgba(15, 23, 42, 0.45);
+    }
+
+    .group:hover .book-3d {
+      transform: rotateY(-5deg) rotateX(2deg) rotateZ(0deg) scale(1.06);
+      box-shadow: -14px 20px 30px rgba(2, 132, 199, 0.32);
+    }
+
+    .book-3d::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(0,0,0,0.45));
+      transform: rotateY(90deg) translateZ(-6px);
+      border-radius: 3px 0 0 3px;
+    }
+
+    .book-3d::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 3px;
+      width: 7px;
+      height: calc(100% - 6px);
+      background: repeating-linear-gradient(90deg, #fafaf9 0px, #d6d3d1 2px, #fafaf9 4px);
+      border-radius: 0 3px 3px 0;
+      box-shadow: inset 1px 0 3px rgba(0,0,0,0.25);
+    }
+
+    /* Audio Waveform Animation */
+    .wave-bar {
+      width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0284C7, #4F46E5);
+      transition: height 0.2s ease;
+    }
+    html.dark .wave-bar {
+      background: linear-gradient(180deg, #38BDF8, #818CF8);
+    }
+    @keyframes pulseWave {
+      0%, 100% { transform: scaleY(0.3); }
+      50% { transform: scaleY(1); }
+    }
+    .playing .wave-bar {
+      animation: pulseWave 0.85s infinite ease-in-out;
+    }
+
+    /* Mutolaa Reader Paper Themes */
+    .reader-paper-day { background-color: #FAF6EE; color: #1E293B; }
+    .reader-paper-sepia { background-color: #F1E4C8; color: #3B2F2F; }
+    .reader-paper-night { background-color: #0B1120; color: #E2E8F0; }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0284C7; }
+  </style>
+</head>
+
+<body class="min-h-screen pb-28 lg:pb-16 selection:bg-sky-600 selection:text-white">
+
+  <!-- Hidden Real HTML5 Audio Element -->
+  <audio id="realAudioElement" preload="metadata" class="hidden"></audio>
+
+  <!-- Toast Stack -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[120] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-3 sm:px-0"></div>
+
+  <!-- =====================================================================
+       1. INITIAL MANDATORY AUTHENTICATION GATEWAY (KIRISH / RO'YXATDAN O'TISH / TELEGRAM BOT)
+       ===================================================================== -->
+  <div id="authGatewayScreen" class="fixed inset-0 z-[100] overflow-y-auto flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl">
+    <!-- Top Right Theme Switcher on Auth Gate -->
+    <div class="fixed top-4 right-4 z-[105] flex items-center gap-2">
+      <button onclick="toggleTheme()" class="surface-panel px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:border-sky-500 transition">
+        <span id="gateThemeIcon">☀️</span>
+        <span id="gateThemeText">Kun rejimi</span>
+      </button>
+    </div>
+
+    <div class="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 surface-panel rounded-3xl overflow-hidden my-auto border border-sky-500/30 shadow-2xl">
+      
+      <!-- Left Showcase Column: Mutolaa & KitobUz Highlights -->
+      <div class="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-sky-700 via-indigo-900 to-slate-950 text-white flex flex-col justify-between gap-6">
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center shadow-lg">
+              <span class="text-2xl">📚</span>
+            </div>
+            <div>
+              <h1 class="text-2xl font-extrabold tracking-tight">Kitob<span class="text-sky-300">Uz</span></h1>
+              <p class="text-xs text-sky-200/80">Onlayn Katalog va Mutolaa Ekotizimi</p>
+            </div>
+          </div>
+
+          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+            O'zbek va jahon adabiyoti durdonalarini <strong>🎧 Audiokitob</strong>, <strong>📕 PDF</strong> hamda <strong>📘 Elektron Mutolaa (Word/EPUB)</strong> formatlarida o'qish uchun shaxsiy hisobingizga kiring yoki Telegram bot orqali ro'yxatdan o'ting.
+          </p>
+        </div>
+
+        <!-- 3D Book Showcase -->
+        <div class="rounded-2xl bg-white/5 border border-white/15 p-5 flex items-center gap-4">
+          <div class="book-3d w-20 h-28 bg-gradient-to-br from-amber-600 via-amber-800 to-stone-950 p-2.5 flex flex-col justify-between text-white shrink-0">
+            <span class="text-[8px] font-mono uppercase tracking-widest text-amber-200">MUTOLAA</span>
+            <span class="font-serif font-bold text-xs leading-tight">O'tkan Kunlar</span>
+            <span class="text-[8px] text-amber-100/80">A. Qodiriy</span>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold text-[10px]">
+              ✨ Mutolaa App Tajribasi
+            </div>
+            <h3 class="font-bold text-sm text-white">Shaxsiy javon va Audio sinxronizatsiya</h3>
+            <p class="text-slate-300 text-[11px] leading-normal">O'qish jarayoni, iqtiboslar va yillik maqsadingiz har bir qurilmada saqlanadi.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+          <div class="p-2.5 rounded-xl bg-white/10 border border-white/10">
+            <div class="font-extrabold text-sky-300">🎧 Audio</div>
+            <div class="text-[10px] text-slate-300">0.75x – 2.0x</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/10 border border-white/10">
+            <div class="font-extrabold text-rose-300">📕 PDF / Word</div>
+            <div class="text-[10px] text-slate-300">Ichki O'quvchi</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/10 border border-white/10">
+            <div class="font-extrabold text-emerald-300">🤖 Telegram</div>
+            <div class="text-[10px] text-slate-300">Bot Avtorizatsiya</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: 3-Mode Auth Tabs (Kirish / Ro'yxatdan o'tish / Telegram Bot) -->
+      <div class="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-center space-y-5">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-main">Tizimga xush kelibsiz!</h2>
+          <p class="text-xs sm:text-sm text-sub mt-1">Katalogdan to'liq foydalanish uchun o'zingizga qulay usulda kiring</p>
+        </div>
+
+        <!-- Auth Navigation Tabs -->
+        <div class="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl surface-input text-xs font-bold">
+          <button type="button" id="gateTab_login" onclick="switchGateTab('login')" class="py-2.5 px-2 rounded-xl bg-sky-600 text-white shadow transition">
+            🔑 Kirish
+          </button>
+          <button type="button" id="gateTab_register" onclick="switchGateTab('register')" class="py-2.5 px-2 rounded-xl text-sub hover:text-main transition">
+            📝 Ro'yxatdan o'tish
+          </button>
+          <button type="button" id="gateTab_telegram" onclick="switchGateTab('telegram')" class="py-2.5 px-2 rounded-xl text-sub hover:text-main transition">
+            🤖 Telegram Bot
+          </button>
+        </div>
+
+        <!-- TAB 1: STANDARD LOGIN (ALSO SECRET ADMIN PORTAL) -->
+        <form id="gateForm_login" onsubmit="handleStandardLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-sub mb-1.5">Login, Username yoki Email *</label>
+            <input id="loginIdInput" type="text" required placeholder="Username yoki email kiriting" class="w-full px-4 py-3 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-sub mb-1.5">Parol *</label>
+            <input id="loginPassInput" type="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </div>
+          <p id="loginErrText" class="text-xs font-semibold text-rose-500 hidden"></p>
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-lg shadow-sky-600/25 transition">
+            Katalogga kirish
+          </button>
+        </form>
+
+        <!-- TAB 2: STANDARD FULL REGISTRATION -->
+        <form id="gateForm_register" onsubmit="handleStandardRegister(event)" class="hidden space-y-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Ism va Familiya *</label>
+              <input id="regFullName" type="text" required placeholder="Quvonchbek Baratov" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Username *</label>
+              <input id="regUsername" type="text" required placeholder="quvonch_05" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Email yoki Telefon *</label>
+              <input id="regContact" type="text" required placeholder="+998 90 123 45 67" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Yillik kitob maqsadi</label>
+              <input id="regGoal" type="number" min="1" max="365" value="25" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-sub mb-1">Parol (kamida 4 ta belgi) *</label>
+            <input id="regPassword" type="password" required minlength="4" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </div>
+          <p id="regErrText" class="text-xs font-semibold text-rose-500 hidden"></p>
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm shadow-lg transition">
+            Ro'yxatdan o'tish va Boshlash
+          </button>
+        </form>
+
+        <!-- TAB 3: TELEGRAM BOT REGISTRATION & OTP AUTHENTICATION -->
+        <div id="gateForm_telegram" class="hidden space-y-4">
+          <div class="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
+                🤖 Rasmiy Telegram Bot orqali tezkor ro'yxatdan o'tish
+              </span>
+              <span id="tgBotHandleBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-700 dark:text-sky-300 font-bold">@KitobUz_AuthBot</span>
+            </div>
+            <p class="text-xs text-sub leading-relaxed">
+              1. Ismingiz va Telegram <code class="font-mono font-bold">@username</code> yoki Chat ID raqamingizni kiriting.<br/>
+              2. <strong>"Tasdiqlash kodini olish"</strong> tugmasini bosing (Bot ulangan bo'lsa kod Telegramingizga boradi yoki bot oynasi ochiladi).
+            </p>
+          </div>
+
+          <form onsubmit="handleTelegramAuthVerify(event)" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-sub mb-1">Ism-sharifingiz *</label>
+                <input id="tgAuthName" type="text" required placeholder="Ism Familiya" class="w-full px-3.5 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-sub mb-1">Telegram Chat ID yoki @username *</label>
+                <div class="flex gap-1.5">
+                  <input id="tgAuthUser" type="text" required placeholder="1686406789 yoki @username" class="w-full px-3 py-2.5 rounded-xl surface-input text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                  <button type="button" onclick="detectUserChatIdFromBot()" class="px-2.5 py-2 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[11px] font-extrabold shrink-0 hover:bg-amber-500 hover:text-white transition" title="Botga /start bosgach Chat ID ni avtomatik aniqlash">
+                    🔍 ID
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button type="button" onclick="sendTelegramOtpCode()" class="flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow">
+                <span>✈️ 1. Botdan OTP kod olish</span>
+              </button>
+              <a id="tgDeepLinkBtn" href="https://t.me/KitobUz_AuthBot" target="_blank" rel="noopener noreferrer" class="py-2.5 px-4 rounded-xl border border-sky-500/50 text-sky-600 dark:text-sky-400 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-sky-500/10">
+                <span>Botga /start bosish ↗</span>
+              </a>
+            </div>
+
+            <!-- OTP Input Box -->
+            <div id="tgOtpBox" class="pt-1">
+              <label class="block text-xs font-bold text-sub mb-1">6 xonali tasdiqlash kodi (OTP) *</label>
+              <div class="flex gap-2">
+                <input id="tgOtpInput" type="text" required maxlength="6" placeholder="Masalan: 482910" class="flex-1 px-4 py-2.5 rounded-xl surface-input font-mono text-base font-extrabold tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-lg">
+                  ✅ Tasdiqlash va Kirish
+                </button>
+              </div>
+              <p id="tgOtpStatusHint" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1.5 hidden"></p>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       2. TOP STICKY HEADER (ADAPTIVE DAY/NIGHT, SEARCH, NOTIFICATIONS, PROFILE)
+       ===================================================================== -->
+  <header class="sticky top-0 z-40 surface-panel border-b backdrop-blur-md bg-opacity-95">
+    <div class="max-w-[1440px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2.5 shrink-0 cursor-pointer" onclick="resetAllFilters()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg sm:text-2xl font-extrabold tracking-tight text-main">Kitob<span class="text-sky-600 dark:text-sky-400">Uz</span></span>
+            <span id="headerCloudDot" class="w-2 h-2 rounded-full bg-emerald-500" title="Tizim faol"></span>
+          </div>
+          <p class="hidden sm:block text-[10px] font-semibold text-mute -mt-1">Mutolaa va Elektron Katalog</p>
+        </div>
+      </div>
+
+      <!-- Smart Sticky Search Bar -->
+      <div class="flex-1 max-w-xl mx-1 sm:mx-3">
+        <div class="relative flex items-center">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 text-mute absolute left-3.5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z"/>
+          </svg>
+          <input
+            id="searchInput"
+            type="text"
+            oninput="handleSearch(this.value)"
+            placeholder="Kitob nomi, muallif yoki janr bo'yicha qidiring..."
+            class="w-full pl-10 pr-16 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm surface-input focus:outline-none focus:ring-2 focus:ring-sky-500 transition font-medium"
+          />
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-10 text-mute hover:text-rose-500 p-1 font-bold text-xs">
+            ✕
+          </button>
+          <button onclick="document.getElementById('searchInput').focus()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-sky-600 to-indigo-600 flex items-center justify-center text-white absolute right-1.5 shadow">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        
+        <!-- Reading Streak Pill (Mutolaa Feature) -->
+        <button onclick="openProfileModal('stats')" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-extrabold" title="Kunlik mutolaa seriyangiz">
+          <span>🔥</span>
+          <span id="streakHeaderCount">3 kun</span>
+        </button>
+
+        <!-- Kun / Tun Rejimi Tugmasi -->
+        <button
+          onclick="toggleTheme()"
+          class="px-2.5 sm:px-3 py-2 rounded-xl surface-input hover:border-sky-500 text-xs font-bold flex items-center gap-1.5 transition"
+          title="Kun / Tun rejimini almashtirish"
+        >
+          <span id="themeIcon">☀️</span>
+          <span id="themeText" class="hidden md:inline">Kun</span>
+        </button>
+
+        <!-- Bildirishnomalar Markazi (Notification Bell) -->
+        <div class="relative">
+          <button
+            onclick="toggleNotificationDropdown(event)"
+            class="relative p-2 sm:p-2.5 rounded-xl surface-input hover:border-sky-500 transition"
+            title="Bildirishnomalar"
+          >
+            <svg class="w-5 h-5 text-main" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <span id="notifUnreadBadge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center">0</span>
+          </button>
+
+          <!-- Notification Dropdown Box -->
+          <div id="notificationDropdown" class="hidden fixed sm:absolute right-3 sm:right-0 left-3 sm:left-auto top-16 sm:top-12 sm:w-96 surface-panel rounded-2xl p-4 z-50 border border-sky-500/30 shadow-2xl">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-300/60 dark:border-slate-700">
+              <div class="flex items-center gap-2">
+                <h4 class="font-extrabold text-sm text-main">🔔 Bildirishnomalar</h4>
+                <span id="notifHeaderCount" class="text-[11px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-700 dark:text-sky-300 font-bold">0 yangi</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="markAllNotificationsRead()" class="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline">O'qildi</button>
+                <button onclick="clearAllNotifications()" class="text-[11px] font-bold text-rose-500 hover:underline">Tozalash</button>
+              </div>
+            </div>
+            <div id="notificationList" class="mt-3 max-h-72 overflow-y-auto space-y-2 pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Shaxsiy Kitob Javoni Tugmasi -->
+        <button
+          onclick="openProfileModal('shelf')"
+          class="relative p-2 sm:p-2.5 rounded-xl surface-input hover:border-sky-500 transition"
+          title="Mening kitob javonim"
+        >
+          <svg class="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          </svg>
+          <span id="shelfCountBadge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-sky-600 text-white text-[10px] font-extrabold flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Faqat Admin kirganda ko'rinadigan Boshqaruv Tugmasi -->
+        <button
+          id="adminQuickBtn"
+          onclick="openAdminModal()"
+          class="hidden px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-extrabold shadow-md items-center gap-1.5"
+        >
+          <span>⚙️</span>
+          <span class="hidden sm:inline">Admin</span>
+        </button>
+
+        <!-- Foydalanuvchi Profili Tugmasi -->
+        <button
+          id="userNavBtn"
+          onclick="openProfileModal('profile')"
+          class="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-gradient-to-r from-sky-600 to-indigo-600 text-white text-xs sm:text-sm font-bold shadow hover:opacity-95 transition"
+        >
+          <img id="navUserAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Baratov" alt="Avatar" class="w-7 h-7 rounded-full bg-slate-900 border border-white/50" />
+          <span id="navUserName" class="max-w-[90px] truncate">Profil</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       3. MUTOLAA APP-STYLE TOP STORY / FEATURED CAROUSEL & CONTINUE READING
+       ===================================================================== -->
+  <section class="max-w-[1440px] mx-auto px-3 sm:px-6 pt-5">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+      
+      <!-- Left 8 Cols: Mutolaa Kun Kitobi & Tezkor Toifalar -->
+      <div class="lg:col-span-8 surface-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-l-sky-600">
+        <div class="space-y-2 text-center sm:text-left">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full badge-audio text-[11px]">
+            <span>✨ Mutolaa Kun Kitobi</span>
+          </div>
+          <h2 id="heroBookTitle" class="text-lg sm:text-xl font-extrabold text-main">Clean Architecture & Zamonaviy Dasturlash</h2>
+          <p id="heroBookDesc" class="text-xs text-sub line-clamp-2 max-w-xl">
+            Dasturiy ta'minot arxitekturasi, kod tozaligi va murakkab tizimlarni loyihalash bo'yicha eng mashhur qo'llanma — elektron va audio formatda.
+          </p>
+          <div class="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <button onclick="openReaderModal('b4')" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold shadow">
+              📖 Hozir o'qish
+            </button>
+            <button onclick="playBookById('b4')" class="px-3.5 py-2 rounded-xl surface-input hover:border-sky-500 text-xs font-bold">
+              🎧 Audiokitobni tinglash
+            </button>
+          </div>
+        </div>
+
+        <!-- Mini 3D Book Preview -->
+        <div onclick="openReaderModal('b4')" class="book-3d-stage rounded-2xl p-4 shrink-0 cursor-pointer group">
+          <div class="book-3d w-20 h-28 bg-gradient-to-br from-cyan-600 via-blue-800 to-slate-900 p-2.5 flex flex-col justify-between text-white">
+            <span class="text-[7px] font-mono uppercase tracking-wider text-cyan-200">BESTSELLER</span>
+            <span class="font-serif font-bold text-[11px] leading-tight">Clean Architecture</span>
+            <span class="text-[8px] text-slate-200">R. Martin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right 4 Cols: Mutolaa Davom Ettirish & Yillik Maqsad Vidjeti -->
+      <div class="lg:col-span-4 surface-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">📈 Mutolaa Statistikasi</span>
+          <button onclick="openProfileModal('profile')" class="text-[11px] font-bold text-sub hover:text-sky-600 underline">Batafsil</button>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-main">Yillik maqsad: <strong id="widgetGoalCurrent">4</strong> / <span id="widgetGoalTarget">25</span> kitob</span>
+            <span id="widgetGoalPercent" class="text-sky-600 dark:text-sky-400">16%</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full bg-slate-300/70 dark:bg-slate-800 overflow-hidden">
+            <div id="widgetGoalBar" class="h-full bg-gradient-to-r from-sky-500 to-indigo-600 rounded-full transition-all duration-500" style="width: 16%"></div>
+          </div>
+        </div>
+
+        <div class="pt-1 border-t border-slate-300/60 dark:border-slate-800 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-mute block text-[10px]">Oxirgi o'qilgan asar:</span>
+            <strong id="lastReadBookTitle" class="text-main truncate block max-w-[180px]">Badiiy Ammari</strong>
+          </div>
+          <button id="continueLastReadBtn" onclick="openReaderModal('b1')" class="px-3 py-1.5 rounded-xl bg-indigo-600/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 font-extrabold text-xs hover:bg-indigo-600 hover:text-white transition">
+            Davom etish →
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       4. MAIN WORKSPACE (LEFT MULTI-FILTER SIDEBAR + RIGHT BENTO GRID)
+       ===================================================================== -->
+  <main class="max-w-[1440px] mx-auto px-3 sm:px-6 pt-5">
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
+
+      <!-- CHAP TOMON: MULTI-FILTER SIDEBAR -->
+      <aside
+        id="filterSidebar"
+        class="fixed lg:sticky top-0 lg:top-24 left-0 z-50 lg:z-10 w-72 lg:w-64 h-full lg:h-auto p-5 surface-panel lg:rounded-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto shrink-0"
+      >
+        <div class="flex items-center justify-between mb-4 lg:hidden">
+          <h3 class="font-extrabold text-base text-main">Katalog Filtrlari</h3>
+          <button onclick="toggleMobileSidebar()" class="p-1.5 rounded-lg surface-input font-bold">✕</button>
+        </div>
+
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">Filtrlar</span>
+          <button onclick="resetAllFilters()" class="text-xs font-bold text-sub hover:text-rose-500 underline">Tozalash</button>
+        </div>
+
+        <!-- GENRES (Janrlar) -->
+        <div class="mb-5">
+          <button onclick="toggleAccordion('genreList')" class="w-full flex items-center justify-between py-2 font-extrabold text-sm text-main border-b border-slate-300/70 dark:border-slate-800">
+            <span>Genres (Janrlar)</span>
+            <span>▾</span>
+          </button>
+          <div id="genreList" class="mt-2.5 space-y-2 text-sm"></div>
+        </div>
+
+        <!-- LANGUAGES (Tillar) -->
+        <div class="mb-5">
+          <button onclick="toggleAccordion('langList')" class="w-full flex items-center justify-between py-2 font-extrabold text-sm text-main border-b border-slate-300/70 dark:border-slate-800">
+            <span>Languages (Tillar)</span>
+            <span>▾</span>
+          </button>
+          <div id="langList" class="mt-2.5 space-y-2 text-sm"></div>
+        </div>
+
+        <!-- FORMATLAR -->
+        <div class="mb-5">
+          <h4 class="font-extrabold text-sm text-main mb-2.5 border-b border-slate-300/70 dark:border-slate-800 pb-2">Formatlar</h4>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="setFormatFilter('all')" id="fmt_all" class="fmt-btn py-2 px-2.5 rounded-xl border-2 border-sky-600 bg-sky-500/15 text-sky-800 dark:text-sky-300 font-extrabold">Barchasi</button>
+            <button onclick="setFormatFilter('audio')" id="fmt_audio" class="fmt-btn py-2 px-2.5 rounded-xl surface-input font-semibold hover:border-sky-500">🎧 Audio</button>
+            <button onclick="setFormatFilter('pdf')" id="fmt_pdf" class="fmt-btn py-2 px-2.5 rounded-xl surface-input font-semibold hover:border-sky-500">📕 PDF</button>
+            <button onclick="setFormatFilter('word')" id="fmt_word" class="fmt-btn py-2 px-2.5 rounded-xl surface-input font-semibold hover:border-sky-500">📘 Word/Matn</button>
+          </div>
+        </div>
+
+        <!-- SARALASH -->
+        <div>
+          <label class="block text-xs font-extrabold uppercase tracking-wider text-sub mb-2">Saralash</label>
+          <select id="sortSelect" onchange="renderCatalog()" class="w-full p-2.5 rounded-xl text-xs sm:text-sm font-bold surface-input focus:outline-none">
+            <option value="popular">🔥 Eng mashhurlari</option>
+            <option value="rating">⭐ Yuqori reyting</option>
+            <option value="newest">🆕 Yangi qo'shilganlar</option>
+            <option value="title">🔤 Alifbo bo'yicha (A-Z)</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- Mobil Drawer Orqa Foni -->
+      <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden"></div>
+
+      <!-- O'NG TOMON: BENTO GRID KITOBLAR KATALOGI -->
+      <section class="flex-1 w-full min-w-0">
+        <!-- Tezkor Janr Pillari va Hisoblagich -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h1 class="text-base sm:text-xl font-extrabold text-main">
+              Katalogdagi kitoblar: <span id="totalBooksCount" class="text-sky-600 dark:text-sky-400">0</span> ta
+            </h1>
+            <p class="text-xs text-sub">Kitob ustiga bosib ichki mutolaa oynasini oching yoki audiokitob tinglang</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="toggleMobileSidebar()" class="lg:hidden px-3.5 py-2 rounded-xl bg-sky-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow">
+              <span>🗂️ Filtrlar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4-USTUNLI BENTO GRID -->
+        <div id="booksGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       5. RESPONSIVE AUDIO PLAYER WIDGET (COLLAPSIBLE ON MOBILE SO IT NEVER BLOCKS CARDS)
+       ===================================================================== -->
+  <div
+    id="audioPlayerWidget"
+    class="fixed bottom-16 lg:bottom-5 right-2 left-2 sm:left-auto sm:right-5 z-30 sm:w-96 surface-panel rounded-2xl p-3 sm:p-4 border-2 border-sky-500/40 shadow-2xl transition-all duration-300"
+  >
+    <div class="flex items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        <div id="playerCover" class="w-10 h-12 sm:w-11 sm:h-14 rounded-lg bg-gradient-to-br from-sky-600 to-indigo-800 shrink-0 flex items-center justify-center text-white font-serif font-bold text-xs shadow">
+          3D
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5">
+            <h4 id="playerTitle" class="font-extrabold text-xs sm:text-sm text-main truncate">TheWavemoow</h4>
+            <span id="playerSourceBadge" class="text-[9px] px-1.5 py-0.5 rounded badge-audio shrink-0">Synth Audio</span>
+          </div>
+          <p id="playerAuthor" class="text-[11px] text-sub truncate">Boon Mehason</p>
+        </div>
+      </div>
+
+      <!-- Speed & Collapse Controls -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button onclick="cyclePlaybackSpeed()" id="playerSpeedBtn" class="px-2 py-1 rounded-lg surface-input text-[10px] font-mono font-extrabold text-main hover:border-sky-500" title="O'qish tezligi">
+          1.0x
+        </button>
+        <button onclick="toggleMinimizePlayer()" class="p-1.5 rounded-lg surface-input text-xs font-bold text-sub hover:text-main" title="Pleyerni yig'ish/yoyish">
+          <span id="playerCollapseIcon">▾</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Expandable Body -->
+    <div id="playerExpandedBody" class="mt-2.5 space-y-2">
+      <!-- Waveform & Time -->
+      <div class="flex items-center gap-2">
+        <span id="playerCurrentTime" class="text-[10px] font-mono font-bold text-sub w-8">0:00</span>
+        <div id="waveformContainer" onclick="seekAudio(event)" class="flex-1 h-6 flex items-center justify-between gap-0.5 cursor-pointer px-1"></div>
+        <span id="playerDuration" class="text-[10px] font-mono font-bold text-sub w-8 text-right">3:25</span>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="flex items-center justify-between text-main pt-0.5">
+        <button onclick="skipAudio(-10)" class="text-[11px] font-bold text-sub hover:text-sky-600 transition">↺ -10s</button>
+        <div class="flex items-center gap-3">
+          <button onclick="prevNextAudio(-1)" class="p-1 text-sub hover:text-main transition">⏮</button>
+          <button
+            id="playPauseBtn"
+            onclick="togglePlayAudio()"
+            class="w-9 h-9 rounded-full bg-gradient-to-r from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md hover:scale-105 transition font-bold"
+          >
+            ▶
+          </button>
+          <button onclick="prevNextAudio(1)" class="p-1 text-sub hover:text-main transition">⏭</button>
+        </div>
+        <button onclick="skipAudio(10)" class="text-[11px] font-bold text-sub hover:text-sky-600 transition">+10s ↻</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       6. MOBILE BOTTOM NAVIGATION BAR (MUTOLAA APP LAYOUT)
+       ===================================================================== -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 surface-panel border-t flex items-center justify-around py-2 text-[11px] font-bold">
+    <button onclick="resetAllFilters()" class="flex flex-col items-center gap-0.5 text-sky-600 dark:text-sky-400">
+      <span class="text-base">📚</span><span>Katalog</span>
+    </button>
+    <button onclick="toggleMobileSidebar()" class="flex flex-col items-center gap-0.5 text-sub">
+      <span class="text-base">🗂️</span><span>Filtrlar</span>
+    </button>
+    <button onclick="openReaderModal(lastReadBookId || 'b1')" class="flex flex-col items-center gap-0.5 text-sub">
+      <span class="text-base">📖</span><span>Mutolaa</span>
+    </button>
+    <button onclick="openProfileModal('shelf')" class="flex flex-col items-center gap-0.5 text-sub">
+      <span class="text-base">🔖</span><span>Javonim</span>
+    </button>
+    <button onclick="openProfileModal('profile')" class="flex flex-col items-center gap-0.5 text-sub">
+      <span class="text-base">👤</span><span id="mobileNavUserText">Profil</span>
+    </button>
+  </nav>
+
+  <!-- =====================================================================
+       7. MODAL 1: FIXED PERSONAL PROFILE, READING STATS & 3-STATUS BOOKSHELF
+       ===================================================================== -->
+  <div id="profileModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6" onclick="if(event.target===this) closeProfileModal()">
+    <div class="surface-panel w-full max-w-4xl rounded-3xl p-5 sm:p-7 relative border border-sky-500/30 max-h-[92vh] overflow-y-auto shadow-2xl">
+      <button onclick="closeProfileModal()" class="absolute top-4 right-4 w-8 h-8 rounded-xl surface-input font-bold text-main hover:text-rose-500">✕</button>
+
+      <!-- Profile Header -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-slate-300/70 dark:border-slate-800 pr-8">
+        <div class="flex items-center gap-4">
+          <img id="profileAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Baratov" class="w-16 h-16 rounded-2xl bg-slate-900 border-2 border-sky-500 shadow" />
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 id="profileFullName" class="text-lg sm:text-xl font-extrabold text-main">Foydalanuvchi</h3>
+              <span id="profileRoleBadge" class="px-2.5 py-0.5 rounded-full text-[11px] badge-audio">Kitobxon</span>
+            </div>
+            <p id="profileEmailHandle" class="text-xs text-sub mt-0.5">@username • email@kitobuz.uz</p>
+            <p id="profileBioDisplay" class="text-xs text-mute mt-1 italic">Badiiy va ilmiy adabiyotlar ishqibozi</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button id="openAdminFromProfileBtn" onclick="closeProfileModal(); openAdminModal();" class="hidden px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shadow">
+            ⚙️ Admin Panel
+          </button>
+          <button onclick="logoutUser()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-extrabold hover:bg-rose-600 hover:text-white transition">
+            🚪 Hisobdan chiqish
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Sub-Tabs -->
+      <div class="flex flex-wrap gap-2 my-4">
+        <button onclick="switchProfileTab('shelf')" id="profTab_shelf" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-sky-600 text-white">
+          🔖 Mening Kitob Javonim
+        </button>
+        <button onclick="switchProfileTab('quotes')" id="profTab_quotes" class="px-4 py-2 rounded-xl text-xs font-extrabold surface-input text-main">
+          ✍️ Saqlangan Iqtiboslar
+        </button>
+        <button onclick="switchProfileTab('profile')" id="profTab_profile" class="px-4 py-2 rounded-xl text-xs font-extrabold surface-input text-main">
+          ⚙️ Shaxsiy Ma'lumotlar & Maqsad
+        </button>
+      </div>
+
+      <!-- SUB-TAB 1: MENING JAVONIM (O'qiyapman / Rejada / O'qib bo'ldim) -->
+      <div id="profContent_shelf" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap gap-1.5 text-xs font-bold">
+            <button onclick="setShelfStatusFilter('all')" id="shelfFilter_all" class="px-3 py-1.5 rounded-xl bg-sky-600 text-white">Barchasi</button>
+            <button onclick="setShelfStatusFilter('reading')" id="shelfFilter_reading" class="px-3 py-1.5 rounded-xl surface-input">📖 O'qiyapman</button>
+            <button onclick="setShelfStatusFilter('planned')" id="shelfFilter_planned" class="px-3 py-1.5 rounded-xl surface-input">📌 Rejada</button>
+            <button onclick="setShelfStatusFilter('completed')" id="shelfFilter_completed" class="px-3 py-1.5 rounded-xl surface-input">✅ O'qib bo'ldim</button>
+          </div>
+          <span id="profileShelfCount" class="text-xs font-extrabold text-sky-600 dark:text-sky-400">0 ta kitob</span>
+        </div>
+
+        <div id="savedBooksList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <!-- SUB-TAB 2: SAQLANGAN IQTIBOSLAR (MUTOLAA QUOTES) -->
+      <div id="profContent_quotes" class="hidden space-y-3">
+        <div id="savedQuotesList" class="space-y-2.5"></div>
+      </div>
+
+      <!-- SUB-TAB 3: PROFIL SOZLAMALARI -->
+      <div id="profContent_profile" class="hidden space-y-4">
+        <div class="p-4 sm:p-5 rounded-2xl surface-card space-y-4">
+          <h4 class="font-extrabold text-sm text-main">Shaxsiy profil va 2026-yilgi mutolaa rejasi</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">To'liq Ism va Familiya</label>
+              <input id="editProfileName" type="text" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Username (@handle)</label>
+              <input id="editProfileUsername" type="text" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Qisqacha Bio va Qiziqishlar</label>
+              <input id="editProfileBio" type="text" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Yillik Mutolaa Maqsadi (ta kitob)</label>
+              <input id="editProfileGoal" type="number" min="1" max="500" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+          </div>
+          <button onclick="saveProfileChanges()" class="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold shadow">
+            💾 O'zgarishlarni saqlash
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       8. MODAL 2: MUTOLAA APP E-READER & PDF/WORD/AUDIO SYNCHRONIZED HUB
+       ===================================================================== -->
+  <div id="readerModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-5" onclick="if(event.target===this) closeReaderModal()">
+    <div id="readerContainer" class="reader-paper-day w-full max-w-4xl rounded-3xl overflow-hidden relative border border-sky-500/40 max-h-[94vh] flex flex-col shadow-2xl transition-colors duration-200">
+      
+      <!-- Top Reading Progress Bar -->
+      <div class="w-full h-1.5 bg-slate-300/50 dark:bg-slate-800">
+        <div id="readerProgressBar" class="h-full bg-gradient-to-r from-sky-500 to-emerald-500 transition-all duration-150" style="width: 0%"></div>
+      </div>
+
+      <!-- Reader Toolbar -->
+      <div class="p-3.5 sm:px-6 border-b border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span id="readerGenreBadge" class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded badge-audio">Badiiy</span>
+            <span id="readerProgressLabel" class="text-[11px] font-mono font-bold opacity-75">0% o'qildi</span>
+          </div>
+          <h2 id="readerTitle" class="text-base sm:text-xl font-extrabold truncate mt-0.5">Kitob nomi</h2>
+          <p id="readerAuthor" class="text-xs opacity-75">Muallif</p>
+        </div>
+
+        <!-- Reader Controls: Paper Theme, Font Size, Quote Save, Audio, Close -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <!-- Paper Theme Switcher -->
+          <div class="flex items-center rounded-xl border border-black/15 dark:border-white/15 p-0.5 text-[11px] font-bold">
+            <button onclick="setReaderPaperTheme('day')" class="px-2 py-1 rounded-lg bg-[#FAF6EE] text-slate-900 border border-slate-300" title="Kunduzgi varaq">Kun</button>
+            <button onclick="setReaderPaperTheme('sepia')" class="px-2 py-1 rounded-lg bg-[#F1E4C8] text-[#3B2F2F]" title="Sepia kitob varag'i">Sepia</button>
+            <button onclick="setReaderPaperTheme('night')" class="px-2 py-1 rounded-lg bg-[#0B1120] text-white" title="Tungi rejim">Tun</button>
+          </div>
+
+          <button onclick="changeReaderFontSize(-2)" class="px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-extrabold">A-</button>
+          <button onclick="changeReaderFontSize(2)" class="px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-white/15 text-xs font-extrabold">A+</button>
+          <button onclick="saveSelectedQuote()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40 text-xs font-extrabold" title="Belgilangan matndan iqtibos saqlash">
+            ✍️ Iqtibos
+          </button>
+          <button id="readerListenBtn" class="px-3 py-1.5 rounded-xl bg-sky-600 text-white text-xs font-extrabold">
+            🎧 Audio
+          </button>
+          <a id="readerDownloadBtn" href="#" download class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">
+            ⬇ PDF
+          </a>
+          <button onclick="closeReaderModal()" class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">✕</button>
+        </div>
+      </div>
+
+      <!-- Reader Content Body -->
+      <div id="readerBody" onscroll="handleReaderScroll(this)" class="p-5 sm:p-8 flex-1 overflow-y-auto leading-relaxed text-base space-y-4 font-serif"></div>
+
+      <!-- Reader Footer: Shelf Status Selector -->
+      <div class="px-5 py-3 border-t border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold opacity-80">Holatni belgilash:</span>
+          <select id="readerShelfStatusSelect" onchange="updateBookShelfStatusFromReader(this.value)" class="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold focus:outline-none">
+            <option value="reading">📖 O'qiyapman</option>
+            <option value="planned">📌 Rejada</option>
+            <option value="completed">✅ O'qib bo'ldim</option>
+          </select>
+        </div>
+        <span class="text-[11px] opacity-70">Matnni belgilab "✍️ Iqtibos" tugmasini bossangiz shaxsiy javonga saqlanadi</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       9. MODAL 3: PROTECTED ADMIN PANEL (KITOB YUKLASH, TELEGRAM BOT, FIREBASE, FOYDALANUVCHILAR)
+       ===================================================================== -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6" onclick="if(event.target===this) closeAdminModal()">
+    <div class="surface-panel w-full max-w-5xl rounded-3xl p-5 sm:p-7 relative border-2 border-amber-500/40 max-h-[92vh] overflow-y-auto shadow-2xl">
+      
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-300/70 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 font-extrabold text-lg">⚙️</div>
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-main">KitobUz Boshqaruv Paneli (Super Admin CMS)</h2>
+            <p class="text-xs text-sub">Audio/PDF/Word kitoblar, Telegram Bot integratsiyasi va Firebase Realtime Database sozlamalari</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="px-3.5 py-2 rounded-xl surface-input text-xs font-extrabold hover:text-rose-500">Yopish ✕</button>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="flex flex-wrap gap-2 my-4">
+        <button onclick="switchAdminTab('books')" id="admTab_books" class="adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold bg-sky-600 text-white">➕ Kitob Yuklash & Katalog</button>
+        <button onclick="switchAdminTab('telegram')" id="admTab_telegram" class="adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold surface-input text-main">🤖 Telegram Bot Ulash</button>
+        <button onclick="switchAdminTab('firebase')" id="admTab_firebase" class="adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold surface-input text-main">🔥 Firebase Baza Ulash</button>
+        <button onclick="switchAdminTab('categories')" id="admTab_categories" class="adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold surface-input text-main">🗂️ Janr va Tillar</button>
+        <button onclick="switchAdminTab('security')" id="admTab_security" class="adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold surface-input text-main">👥 Bildirishnoma & Xavfsizlik</button>
+      </div>
+
+      <!-- ADMIN TAB 1: YANGI KITOB QO'SHISH VA KATALOG -->
+      <div id="admContent_books" class="space-y-6">
+        <form onsubmit="handleAddBook(event)" class="p-4 sm:p-5 rounded-2xl surface-card space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-sm text-sky-600 dark:text-sky-400 uppercase tracking-wider">Yangi 3D Kitob va Media Fayllar Yuklash</h3>
+            <label class="flex items-center gap-2 text-xs font-bold text-sub cursor-pointer">
+              <input id="notifyTelegramOnAdd" type="checkbox" checked class="w-4 h-4 accent-sky-600 rounded" />
+              <span>Telegram botga va bildirishnomalarga avto-e'lon yuborish</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Kitob nomi *</label>
+              <input id="newBookTitle" type="text" required placeholder="Masalan: Ikki eshik orasi" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Muallif *</label>
+              <input id="newBookAuthor" type="text" required placeholder="O'tkir Hoshimov" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-sub mb-1">Janr</label>
+                <select id="newBookGenre" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-sub mb-1">Til</label>
+                <select id="newBookLang" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">3D Muqova Rangi</label>
+              <select id="newBookCoverStyle" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold">
+                <option value="from-amber-700 via-yellow-800 to-stone-900">📜 Oltin Klassik</option>
+                <option value="from-sky-600 via-indigo-800 to-slate-900">🌌 Kosmik Moviy</option>
+                <option value="from-emerald-600 via-teal-800 to-slate-900">🌿 Zumrad Ilmiy</option>
+                <option value="from-purple-600 via-fuchsia-800 to-slate-900">🔮 Binafsha Modern</option>
+                <option value="from-rose-600 via-red-800 to-stone-900">🔥 Qirmizi Drama</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Muqova rasmi (ixtiyoriy rasm yuklash)</label>
+              <input id="newBookCoverFile" type="file" accept="image/*" class="w-full p-2 rounded-xl surface-input text-xs" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3 rounded-xl badge-audio">
+              <label class="block text-xs font-extrabold mb-1">🎧 Audio fayl (.mp3, .wav, .ogg)</label>
+              <input id="newBookAudioFile" type="file" accept="audio/*" class="w-full text-xs" />
+            </div>
+            <div class="p-3 rounded-xl badge-pdf">
+              <label class="block text-xs font-extrabold mb-1">📕 PDF fayl (.pdf)</label>
+              <input id="newBookPdfFile" type="file" accept=".pdf,application/pdf" class="w-full text-xs" />
+            </div>
+            <div class="p-3 rounded-xl badge-word">
+              <label class="block text-xs font-extrabold mb-1">📘 Word / Matn (.docx, .txt)</label>
+              <input id="newBookWordFile" type="file" accept=".docx,.doc,.txt" class="w-full text-xs" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-sub mb-1">Kitob matni yoki tavsifi (Word yuklansa avtomatik qo'shiladi)</label>
+            <textarea id="newBookContent" rows="3" placeholder="Asar matnini yoki qisqacha mazmunini kiriting..." class="w-full p-3 rounded-xl surface-input text-sm"></textarea>
+          </div>
+
+          <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-extrabold text-xs sm:text-sm shadow-lg">
+            ➕ Kitobni Katalogga Qo'shish
+          </button>
+        </form>
+
+        <div>
+          <h4 class="font-extrabold text-sm text-main mb-2.5">Katalogdagi barcha kitoblar (<span id="adminTotalBooksLabel">0</span>)</h4>
+          <div id="adminBooksTable" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 2: TELEGRAM BOT ULASH SOZLAMALARI -->
+      <div id="admContent_telegram" class="hidden space-y-4">
+        <div class="p-5 rounded-2xl surface-card space-y-4 border-l-4 border-l-sky-500">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="font-extrabold text-base text-main">🤖 Telegram Bot API va Avtorizatsiya Ko'prigi</h4>
+              <p class="text-xs text-sub">@BotFather orqali olingan Bot Token va Chat ID-ni kiriting. Pastki chiziqchali (_) nomlar uchun xavfsiz HTML rejimi yoqilgan.</p>
+            </div>
+            <span id="tgStatusBadge" class="px-3 py-1 rounded-full text-xs font-extrabold badge-audio">Tayyor</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Telegram Bot Username (@siz) *</label>
+              <input id="tgBotUsernameInput" type="text" placeholder="KitobUz_AuthBot" class="w-full p-2.5 rounded-xl surface-input text-sm font-mono font-bold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Telegram Bot Token (HTTP API) *</label>
+              <input id="tgBotTokenInput" type="password" placeholder="7123456789:AAH..." class="w-full p-2.5 rounded-xl surface-input text-sm font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Admin / Kanal Chat ID *</label>
+              <input id="tgAdminChatIdInput" type="text" placeholder="1686406789" class="w-full p-2.5 rounded-xl surface-input text-sm font-mono font-bold" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2.5 pt-1">
+            <button type="button" onclick="saveTelegramBotConfig()" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold shadow">
+              💾 Bot sozlamalarini saqlash
+            </button>
+            <button type="button" onclick="fetchLatestChatIdFromBot()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shadow">
+              🔍 Botdan Chat ID topish (getUpdates)
+            </button>
+            <button type="button" onclick="testTelegramBotConnection()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
+              ✈️ Botga test xabar yuborish (API Tekshiruvi)
+            </button>
+          </div>
+          <div id="tgApiFeedback" class="text-xs font-bold p-3 rounded-xl surface-input hidden"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 3: FIREBASE REALTIME DATABASE ULASH -->
+      <div id="admContent_firebase" class="hidden space-y-4">
+        <div class="p-5 rounded-2xl surface-card space-y-4 border-l-4 border-l-amber-500">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="font-extrabold text-base text-main">🔥 Firebase Cloud Realtime Database Ulanishi</h4>
+              <p class="text-xs text-sub">Kitoblar katalogi va foydalanuvchilarni Firebase bulutli bazasi bilan real vaqtda sinxronlash</p>
+            </div>
+            <span id="fbStatusBadge" class="px-3 py-1 rounded-full text-xs font-extrabold badge-lang">Lokal Xotira</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Realtime Database URL *</label>
+              <input id="fbDbUrl" type="url" placeholder="https://kitobuz-default-rtdb.firebaseio.com" class="w-full p-2.5 rounded-xl surface-input text-sm font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Web API Key</label>
+              <input id="fbApiKey" type="text" placeholder="AIzaSy..." class="w-full p-2.5 rounded-xl surface-input text-sm font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">Project ID</label>
+              <input id="fbProjectId" type="text" placeholder="kitobuz-app" class="w-full p-2.5 rounded-xl surface-input text-sm font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-sub mb-1">App ID</label>
+              <input id="fbAppId" type="text" placeholder="1:123456789:web:abcdef" class="w-full p-2.5 rounded-xl surface-input text-sm font-mono" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2.5 pt-1">
+            <button onclick="saveFirebaseConfig()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold">
+              💾 Firebase sozlamalarini saqlash
+            </button>
+            <button onclick="syncToFirebaseCloud()" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold">
+              ☁️ Katalogni Firebase-ga yuborish (Push)
+            </button>
+            <button onclick="pullFromFirebaseCloud()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">
+              📥 Firebase-dan yuklab olish (Pull)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 4: JANRLAR VA TILLAR -->
+      <div id="admContent_categories" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="p-4 rounded-2xl surface-card">
+          <h4 class="font-extrabold text-sm text-main mb-3">Janrlar (Genres)</h4>
+          <div class="flex gap-2 mb-3">
+            <input id="newGenreInput" type="text" placeholder="Yangi janr..." class="flex-1 p-2.5 rounded-xl surface-input text-sm" />
+            <button onclick="addGenreByAdmin()" class="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-extrabold">Qo'shish</button>
+          </div>
+          <div id="adminGenreTags" class="flex flex-wrap gap-2"></div>
+        </div>
+        <div class="p-4 rounded-2xl surface-card">
+          <h4 class="font-extrabold text-sm text-main mb-3">Tillar (Languages)</h4>
+          <div class="flex gap-2 mb-3">
+            <input id="newLangInput" type="text" placeholder="Yangi til..." class="flex-1 p-2.5 rounded-xl surface-input text-sm" />
+            <button onclick="addLangByAdmin()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-extrabold">Qo'shish</button>
+          </div>
+          <div id="adminLangTags" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 5: BILDIRISHNOMA YUBORISH & XAVFSIZLIK -->
+      <div id="admContent_security" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Broadcast Notification -->
+        <div class="p-5 rounded-2xl surface-card space-y-3">
+          <h4 class="font-extrabold text-sm text-sky-600 dark:text-sky-400">📣 Barcha kitobxonlarga bildirishnoma yuborish</h4>
+          <input id="broadcastTitleInput" type="text" placeholder="Bildirishnoma sarlavhasi" class="w-full p-2.5 rounded-xl surface-input text-sm font-semibold" />
+          <textarea id="broadcastBodyInput" rows="2" placeholder="Xabar matni..." class="w-full p-2.5 rounded-xl surface-input text-sm"></textarea>
+          <button onclick="sendAdminBroadcastNotification()" class="px-4 py-2.5 rounded-xl bg-sky-600 text-white text-xs font-extrabold">
+            🔔 Bildirishnoma jo'natish
+          </button>
+        </div>
+
+        <!-- Update Admin Credentials -->
+        <div class="p-5 rounded-2xl surface-card space-y-3">
+          <h4 class="font-extrabold text-sm text-rose-500">🔐 Maxfiy Admin Login va Parolni Yangilash</h4>
+          <div>
+            <label class="block text-xs font-bold text-sub mb-1">Admin Logini</label>
+            <input id="adminNewLogin" type="text" class="w-full p-2.5 rounded-xl surface-input text-sm font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-sub mb-1">Yangi Admin Paroli</label>
+            <input id="adminNewPass" type="password" placeholder="Yangi maxfiy parol" class="w-full p-2.5 rounded-xl surface-input text-sm" />
+          </div>
+          <button onclick="updateAdminCredentials()" class="px-4 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold">
+            Parolni saqlash
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       JAVASCRIPT ENGINE (AUTH GATE, TELEGRAM BOT API, FIREBASE, MUTOLAA READER)
+       ===================================================================== -->
+  <script>
+    // 1. DEFAULT DATA & INITIAL CATALOG
+    const DEFAULT_GENRES = ['Badiiy', 'Ilmiy', 'Tarbiyaviy', 'Gaban', 'Kanisanar', 'Baduir', 'IT & Dasturlash'];
+    const DEFAULT_LANGS = ['Uzbek', 'English', 'Russian'];
+
+    const INITIAL_BOOKS = [
+      {
+        id: 'b1',
+        title: 'Badiiy Ammari',
+        author: 'Aoter Aurther',
+        genre: 'Badiiy',
+        lang: 'Uzbek',
+        rating: 4.9,
+        coverStyle: 'from-amber-700 via-yellow-800 to-stone-900',
+        coverImg: '',
+        duration: '3:42',
+        hasAudio: true,
+        hasPdf: false,
+        hasWord: true,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `I BOB. SAMARQAND TONGI\n\nBadiiy Ammari — sharqona falsafa va inson qalbining eng nozik kechinmalarini o'zida mujassam etgan asar. Asarda qahramonning o'zligini anglash yo'lidagi sinovlari, sabr va ma'rifat orqali yuksalishi badiiy bo'yoqlarda tasvirlangan.\n\nInson umri davomida ko'plab manzillarni bosib o'tadi, ammo eng ulug' safar — aql va qalb uyg'unligiga eltuvchi mutolaa safaridir. Har bir sahifa yangi ufqlarni ochadi.`
+      },
+      {
+        id: 'b2',
+        title: 'Percentivevarvbam',
+        author: 'Aother Nasinon',
+        genre: 'Ilmiy',
+        lang: 'English',
+        rating: 4.8,
+        coverStyle: 'from-sky-600 via-indigo-900 to-slate-950',
+        coverImg: '',
+        duration: '4:15',
+        hasAudio: true,
+        hasPdf: true,
+        hasWord: false,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `CHAPTER 1. QUANTUM PERCEPTION\n\nKoinot qonuniyatlari, kvant fizikasi va inson idrokining chegaralari haqidagi zamonaviy ilmiy-ommabop tadqiqot. Kitobda murakkab nazariyalar ravon va tushunarli misollar yordamida ochib berilgan.`
+      },
+      {
+        id: 'b3',
+        title: '3D Book Cover Cards',
+        author: 'Authnr Ralson',
+        genre: 'Tarbiyaviy',
+        lang: 'Uzbek',
+        rating: 4.7,
+        coverStyle: 'from-amber-600 via-orange-800 to-stone-900',
+        coverImg: '',
+        duration: '2:58',
+        hasAudio: true,
+        hasPdf: false,
+        hasWord: true,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `Sahrodagi yolg'iz sayohatchining hayotiy saboqlari. Inson irodasi, maqsad sari intilish va ichki xotirjamlikka erishish sirlari haqida ta'sirli hikoyalar.`
+      },
+      {
+        id: 'b4',
+        title: 'Clean Architecture & UI',
+        author: 'Robert Martin',
+        genre: 'IT & Dasturlash',
+        lang: 'English',
+        rating: 5.0,
+        coverStyle: 'from-cyan-600 via-blue-800 to-slate-900',
+        coverImg: '',
+        duration: '5:10',
+        hasAudio: true,
+        hasPdf: true,
+        hasWord: true,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `PART I. DESIGN PRINCIPLES\n\nMustahkam dasturiy ta'minot arxitekturasi, SOLID tamoyillari va zamonaviy veb-ilovalar tuzilishini loyihalash bo'yicha mukammal amaliy qo'llanma.`
+      },
+      {
+        id: 'b5',
+        title: 'Agata Bavatmhi',
+        author: 'Aother Nasinon',
+        genre: 'Gaban',
+        lang: 'Uzbek',
+        rating: 4.6,
+        coverStyle: 'from-emerald-700 via-teal-900 to-slate-950',
+        coverImg: '',
+        duration: '3:12',
+        hasAudio: true,
+        hasPdf: false,
+        hasWord: false,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `Qadimiy qo'lyozmalar siri va tarixiy sarguzashtlarga boy badiiy roman.`
+      },
+      {
+        id: 'b6',
+        title: 'Boriam Book',
+        author: 'Auther Maoon',
+        genre: 'Kanisanar',
+        lang: 'Russian',
+        rating: 4.8,
+        coverStyle: 'from-rose-700 via-amber-900 to-stone-950',
+        coverImg: '',
+        duration: '3:50',
+        hasAudio: true,
+        hasPdf: true,
+        hasWord: false,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `Klassik adabiyot durdonasi bo'lib, insoniy munosabatlar, sadoqat va vijdon tanlovini yoritadi.`
+      },
+      {
+        id: 'b7',
+        title: 'Kotnan Elress',
+        author: 'Aother Raslid',
+        genre: 'Baduir',
+        lang: 'English',
+        rating: 4.9,
+        coverStyle: 'from-indigo-500 via-purple-800 to-slate-900',
+        coverImg: '',
+        duration: '4:05',
+        hasAudio: true,
+        hasPdf: false,
+        hasWord: true,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `Tog' cho'qqilaridagi erkinlik va ruhiy uyg'onish haqida ilhomlantiruvchi qissa.`
+      },
+      {
+        id: 'b8',
+        title: 'TheWavemoow',
+        author: 'Boon Mehason',
+        genre: 'Ilmiy',
+        lang: 'English',
+        rating: 5.0,
+        coverStyle: 'from-sky-500 via-cyan-800 to-slate-950',
+        coverImg: '',
+        duration: '3:25',
+        hasAudio: true,
+        hasPdf: true,
+        hasWord: true,
+        audioUrl: '',
+        pdfUrl: '',
+        content: `Tovush to'lqinlari, neyro-akustika va zamonaviy raqamli texnologiyalar uyg'unligi haqidagi bestseller kitob.`
+      }
+    ];
+
+    const INITIAL_NOTIFICATIONS = [
+      { id: 'n1', title: 'KitobUz Mutolaa tizimiga xush kelibsiz!', body: 'Kun/Tun rejimi, Telegram bot avtorizatsiyasi va ichki mutolaa oynasi ishga tushirildi.', time: 'Hozirgina', read: false },
+      { id: 'n2', title: '🔥 Kun kitobi: Clean Architecture & UI', body: 'Bugungi tavsiya etilgan kitobni audio va elektron shaklda mutolaa qiling.', time: '10 daqiqa oldin', read: false }
+    ];
+
+    // Persistent State
+    let books = JSON.parse(localStorage.getItem('kitobuz_v6_books')) || INITIAL_BOOKS;
+    let genres = JSON.parse(localStorage.getItem('kitobuz_v6_genres')) || DEFAULT_GENRES;
+    let languages = JSON.parse(localStorage.getItem('kitobuz_v6_langs')) || DEFAULT_LANGS;
+    let users = JSON.parse(localStorage.getItem('kitobuz_v6_users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('kitobuz_v6_current_user')) || null;
+    // Shelf stores { bookId: 'b1', status: 'reading' | 'planned' | 'completed' }
+    let shelfItems = JSON.parse(localStorage.getItem('kitobuz_v6_shelf')) || [
+      { bookId: 'b1', status: 'reading' },
+      { bookId: 'b4', status: 'planned' },
+      { bookId: 'b8', status: 'completed' }
+    ];
+    let savedQuotes = JSON.parse(localStorage.getItem('kitobuz_v6_quotes')) || [
+      { id: 'q1', bookTitle: 'Badiiy Ammari', text: 'Eng ulug‘ safar — aql va qalb uyg‘unligiga eltuvchi mutolaa safaridir.', date: '2026-10-30' }
+    ];
+    let notifications = JSON.parse(localStorage.getItem('kitobuz_v6_notifs')) || INITIAL_NOTIFICATIONS;
+    let adminCreds = JSON.parse(localStorage.getItem('kitobuz_v6_admin')) || { login: 'admin', pass: 'kitobuz2026' };
+    let tgConfig = JSON.parse(localStorage.getItem('kitobuz_v6_tg')) || { botUsername: 'KitobUz_AuthBot', botToken: '', adminChatId: '1686406789' };
+    let fbConfig = JSON.parse(localStorage.getItem('kitobuz_v6_fb')) || { dbUrl: '', apiKey: '', projectId: '', appId: '' };
+
+    // Runtime UI State
+    let selectedGenres = [];
+    let selectedLangs = [];
+    let selectedFormat = 'all';
+    let searchQuery = '';
+    let currentShelfFilter = 'all';
+    let activeReaderBookId = 'b1';
+    let lastReadBookId = localStorage.getItem('kitobuz_v6_last_read') || 'b1';
+    let readerFontSize = 17;
+    let generatedTelegramOtp = null;
+
+    // Audio Player Runtime
+    let currentAudioBookIndex = 7;
+    let isPlaying = false;
+    let isPlayerMinimized = false;
+    let playbackSpeeds = [0.75, 1.0, 1.25, 1.5, 2.0];
+    let currentSpeedIndex = 1;
+    let synthInterval = null;
+    let synthSeconds = 0;
+    let audioCtx = null;
+
+    // 2. INITIALIZE APPLICATION
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      syncAuthGateVisibility();
+      renderFilters();
+      renderCatalog();
+      updateUserNavbar();
+      updateShelfBadge();
+      renderNotifications();
+      updateMutolaaGoalWidget();
+      initWaveformBars();
+      loadPlayerBook(books[currentAudioBookIndex] || books[0], false);
+      loadAdminConfigInputs();
+    });
+
+    // 3. DAY / NIGHT THEME (WARM EDITORIAL DAY & DEEP NIGHT)
+    function initTheme() {
+      const savedTheme = localStorage.getItem('kitobuz_v6_theme') || 'light';
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      updateThemeButtons(savedTheme === 'dark');
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('kitobuz_v6_theme', isDark ? 'dark' : 'light');
+      updateThemeButtons(isDark);
+    }
+
+    function updateThemeButtons(isDark) {
+      const icon = isDark ? '🌙' : '☀️';
+      const label = isDark ? 'Tun' : 'Kun';
+      document.getElementById('themeIcon').textContent = icon;
+      document.getElementById('themeText').textContent = label;
+      const gIcon = document.getElementById('gateThemeIcon');
+      const gText = document.getElementById('gateThemeText');
+      if (gIcon) gIcon.textContent = icon;
+      if (gText) gText.textContent = isDark ? 'Tun rejimi' : 'Kun rejimi';
+    }
+
+    // 4. MANDATORY AUTH GATEWAY & TELEGRAM BOT REGISTRATION
+    function syncAuthGateVisibility() {
+      const gate = document.getElementById('authGatewayScreen');
+      if (currentUser) {
+        gate.classList.add('hidden');
+        gate.classList.remove('flex');
+      } else {
+        gate.classList.remove('hidden');
+        gate.classList.add('flex');
+      }
+      // Update Telegram Bot Handle on Auth Gate
+      const cleanBot = (tgConfig.botUsername || 'KitobUz_AuthBot').replace(/^@/, '');
+      document.getElementById('tgBotHandleBadge').textContent = '@' + cleanBot;
+      document.getElementById('tgDeepLinkBtn').href = `https://t.me/${cleanBot}`;
+    }
+
+    function switchGateTab(tab) {
+      ['login', 'register', 'telegram'].forEach(t => {
+        document.getElementById('gateForm_' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('gateTab_' + t).className = t === tab
+          ? 'py-2.5 px-2 rounded-xl bg-sky-600 text-white shadow transition'
+          : 'py-2.5 px-2 rounded-xl text-sub hover:text-main transition';
+      });
+    }
+
+    function handleStandardLogin(e) {
+      e.preventDefault();
+      const id = document.getElementById('loginIdInput').value.trim();
+      const pass = document.getElementById('loginPassInput').value;
+      const errEl = document.getElementById('loginErrText');
+
+      // Secret Admin Check
+      if (id.toLowerCase() === adminCreds.login.toLowerCase() && pass === adminCreds.pass) {
+        currentUser = {
+          name: 'Bosh Administrator',
+          username: adminCreds.login,
+          email: 'admin@kitobuz.uz',
+          role: 'admin',
+          bio: 'Platforma Bosh Administratori',
+          goal: 50,
+          streak: 14
+        };
+        localStorage.setItem('kitobuz_v6_current_user', JSON.stringify(currentUser));
+        errEl.classList.add('hidden');
+        syncAuthGateVisibility();
+        updateUserNavbar();
+        updateMutolaaGoalWidget();
+        openAdminModal();
+        showToast('Xush kelibsiz, Administrator! Boshqaruv paneli ochildi.');
+        return;
+      }
+
+      const found = users.find(
+        u => (u.username.toLowerCase() === id.toLowerCase() || u.email.toLowerCase() === id.toLowerCase()) && u.password === pass
+      );
+
+      if (!found) {
+        errEl.textContent = 'Login yoki parol topilmadi. Yangi bo‘lsangiz "Ro‘yxatdan o‘tish" yoki "Telegram Bot" bo‘limidan foydalaning.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      currentUser = found;
+      localStorage.setItem('kitobuz_v6_current_user', JSON.stringify(currentUser));
+      syncAuthGateVisibility();
+      updateUserNavbar();
+      updateMutolaaGoalWidget();
+      showToast(`Xush kelibsiz, ${currentUser.name}!`);
+    }
+
+    function handleStandardRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regFullName').value.trim();
+      const username = document.getElementById('regUsername').value.trim().replace(/^@/, '');
+      const email = document.getElementById('regContact').value.trim();
+      const goal = parseInt(document.getElementById('regGoal').value, 10) || 25;
+      const password = document.getElementById('regPassword').value;
+      const errEl = document.getElementById('regErrText');
+
+      if (username.toLowerCase() === adminCreds.login.toLowerCase()) {
+        errEl.textContent = 'Ushbu username tizim tomonidan band qilingan!';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        errEl.textContent = 'Bu username allaqachon ro‘yxatdan o‘tgan!';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const newUser = { name, username, email, password, role: 'reader', bio: 'KitobUz faol kitobxoni', goal, streak: 1 };
+      users.push(newUser);
+      localStorage.setItem('kitobuz_v6_users', JSON.stringify(users));
+      currentUser = newUser;
+      localStorage.setItem('kitobuz_v6_current_user', JSON.stringify(currentUser));
+
+      addNotification('🎉 Profil muvaffaqiyatli yaratildi!', `Xush kelibsiz, ${name}! Yillik mutolaa maqsadingiz: ${goal} ta kitob.`);
+      syncAuthGateVisibility();
+      updateUserNavbar();
+      updateMutolaaGoalWidget();
+      showToast('Ro‘yxatdan o‘tish muvaffaqiyatli yakunlandi!');
+    }
+
+    // XAVFSIZ TELEGRAM API XABAR YUBORISH FUNKSIYASI (UNDERSCORE "_" XATOLIKLARISIZ)
+    function escapeTgHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    async function sendTelegramMessageSafe(botToken, chatId, htmlText, plainFallbackText) {
+      const cleanToken = String(botToken || '').trim();
+      const cleanChatId = String(chatId || '').trim();
+      if (!cleanToken || !cleanChatId) {
+        return { ok: false, description: 'Bot Token yoki Chat ID kiritilmagan!' };
+      }
+
+      const apiUrl = `https://api.telegram.org/bot${cleanToken}/sendMessage`;
+
+      try {
+        // 1-urinish: Xavfsiz HTML parse_mode bilan (pastki chiziqcha "_" hech qachon xato bermaydi)
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: cleanChatId,
+            text: htmlText,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true
+          })
+        });
+        const data = await res.json();
+        if (data.ok) return data;
+
+        // 2-urinish (Fallback): Agar entity xatosi bo'lsa, oddiy matn (Plain Text) sifatida qayta yuborish
+        if (data.description && data.description.toLowerCase().includes('parse')) {
+          const fallbackRes = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: cleanChatId,
+              text: plainFallbackText || htmlText.replace(/<[^>]+>/g, '')
+            })
+          });
+          return await fallbackRes.json();
+        }
+        return data;
+      } catch (err) {
+        return { ok: false, description: err.message || 'Tarmoq xatosi' };
+      }
+    }
+
+    // FOYDALANUVCHI UCHUN BOTDAN CHAT ID AVTOMATIK ANIQLASH
+    async function detectUserChatIdFromBot() {
+      if (!tgConfig.botToken) {
+        showToast('Admin hali Bot Token kiritmagan. Standart Chat ID kiritishingiz mumkin.');
+        return;
+      }
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${tgConfig.botToken.trim()}/getUpdates`);
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.result) && data.result.length > 0) {
+          const lastMsg = [...data.result].reverse().find(u => u.message && u.message.chat);
+          if (lastMsg) {
+            const chat = lastMsg.message.chat;
+            document.getElementById('tgAuthUser').value = String(chat.id);
+            if (!document.getElementById('tgAuthName').value.trim()) {
+              document.getElementById('tgAuthName').value = [chat.first_name, chat.last_name].filter(Boolean).join(' ') || chat.username || 'Kitobxon';
+            }
+            showToast(`✅ Chat ID topildi: ${chat.id}`);
+            return;
+          }
+        }
+        showToast('Avval botga kirib /start tugmasini bosing, so‘ngra qayta urinib ko‘ring!');
+      } catch (e) {
+        showToast('Botdan Chat ID olishda tarmoq xatosi.');
+      }
+    }
+
+    // TELEGRAM BOT OTP & REGISTRATION
+    async function sendTelegramOtpCode() {
+      const name = document.getElementById('tgAuthName').value.trim();
+      const tgUser = document.getElementById('tgAuthUser').value.trim();
+      if (!name || !tgUser) {
+        showToast('Avval ismingiz va Telegram Chat ID yoki @username kiriting!');
+        return;
+      }
+
+      generatedTelegramOtp = String(Math.floor(100000 + Math.random() * 900000));
+      const cleanBot = (tgConfig.botUsername || 'KitobUz_AuthBot').replace(/^@/, '');
+      document.getElementById('tgDeepLinkBtn').href = `https://t.me/${cleanBot}?start=otp_${generatedTelegramOtp}`;
+
+      const hintEl = document.getElementById('tgOtpStatusHint');
+      hintEl.classList.remove('hidden');
+
+      const targetChat = /^-?\d+$/.test(tgUser) ? tgUser : (tgConfig.adminChatId || '');
+      if (tgConfig.botToken && targetChat) {
+        const htmlMsg =
+          `🔐 <b>KitobUz — Tasdiqlash Kodi (OTP)</b>\n\n` +
+          `👤 <b>Foydalanuvchi:</b> ${escapeTgHtml(name)} (${escapeTgHtml(tgUser)})\n` +
+          `🔑 <b>Tasdiqlash kodi:</b> <code>${generatedTelegramOtp}</code>\n\n` +
+          `<i>Ushbu 6 xonali kodni saytdagi OTP maydoniga kiriting.</i>`;
+        const plainMsg = `KitobUz Tasdiqlash Kodi (OTP): ${generatedTelegramOtp}\nFoydalanuvchi: ${name} (${tgUser})`;
+
+        const result = await sendTelegramMessageSafe(tgConfig.botToken, targetChat, htmlMsg, plainMsg);
+        if (result.ok) {
+          hintEl.className = 'text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1.5';
+          hintEl.textContent = `✅ 6 xonali tasdiqlash kodi Telegramga (Chat ID: ${targetChat}) yuborildi! Telegramingizni tekshiring.`;
+          showToast('✈️ OTP kod Telegramingizga yuborildi!');
+          return;
+        }
+      }
+
+      // Agar Bot Token hali ulanmagan bo'lsa, lokal ko'prik kodi ko'rsatiladi
+      hintEl.className = 'text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1.5';
+      hintEl.textContent = `🤖 Tezkor OTP kodi: ${generatedTelegramOtp} (Avtomatik kiritildi — "Tasdiqlash va Kirish" tugmasini bosing)`;
+      document.getElementById('tgOtpInput').value = generatedTelegramOtp;
+      showToast(`Tasdiqlash kodi: ${generatedTelegramOtp}`);
+    }
+
+    function handleTelegramAuthVerify(e) {
+      e.preventDefault();
+      const name = document.getElementById('tgAuthName').value.trim();
+      const tgUser = document.getElementById('tgAuthUser').value.trim().replace(/^@/, '');
+      const enteredOtp = document.getElementById('tgOtpInput').value.trim();
+
+      if (!generatedTelegramOtp || enteredOtp !== generatedTelegramOtp) {
+        showToast('OTP tasdiqlash kodi noto‘g‘ri! "Botdan OTP kod olish" tugmasini bosing.');
+        return;
+      }
+
+      let existing = users.find(u => u.username.toLowerCase() === tgUser.toLowerCase());
+      if (!existing) {
+        existing = {
+          name,
+          username: tgUser,
+          email: `tg://${tgUser}`,
+          password: enteredOtp,
+          role: 'reader',
+          bio: 'Telegram Bot orqali tasdiqlangan kitobxon',
+          goal: 30,
+          streak: 5
+        };
+        users.push(existing);
+        localStorage.setItem('kitobuz_v6_users', JSON.stringify(users));
+      }
+
+      currentUser = existing;
+      localStorage.setItem('kitobuz_v6_current_user', JSON.stringify(currentUser));
+      addNotification('🤖 Telegram Bot sinxronizatsiyasi', `@${tgUser} profili Telegram bot orqali muvaffaqiyatli bog'landi.`);
+      syncAuthGateVisibility();
+      updateUserNavbar();
+      updateMutolaaGoalWidget();
+      showToast(`Telegram orqali xush kelibsiz, ${currentUser.name}!`);
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      localStorage.removeItem('kitobuz_v6_current_user');
+      closeProfileModal();
+      syncAuthGateVisibility();
+      updateUserNavbar();
+      showToast('Hisobdan chiqildi.');
+    }
+
+    function updateUserNavbar() {
+      const nameEl = document.getElementById('navUserName');
+      const mobText = document.getElementById('mobileNavUserText');
+      const avatarEl = document.getElementById('navUserAvatar');
+      const adminBtn = document.getElementById('adminQuickBtn');
+      const streakEl = document.getElementById('streakHeaderCount');
+
+      if (currentUser) {
+        nameEl.textContent = currentUser.name.split(' ')[0];
+        if (mobText) mobText.textContent = currentUser.name.split(' ')[0];
+        avatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.username)}`;
+        if (streakEl) streakEl.textContent = `${currentUser.streak || 3} kun`;
+
+        if (currentUser.role === 'admin') {
+          adminBtn.classList.remove('hidden');
+          adminBtn.classList.add('flex');
+        } else {
+          adminBtn.classList.add('hidden');
+          adminBtn.classList.remove('flex');
+        }
+      }
+    }
+
+    // 5. NOTIFICATION CENTER (FIXED & INTERACTIVE)
+    function toggleNotificationDropdown(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('notificationDropdown');
+      dd.classList.toggle('hidden');
+      renderNotifications();
+    }
+
+    window.addEventListener('click', (e) => {
+      const dd = document.getElementById('notificationDropdown');
+      if (dd && !dd.classList.contains('hidden') && !dd.contains(e.target)) {
+        dd.classList.add('hidden');
+      }
+    });
+
+    function addNotification(title, body) {
+      notifications.unshift({
+        id: 'n_' + Date.now(),
+        title,
+        body,
+        time: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
+        read: false
+      });
+      localStorage.setItem('kitobuz_v6_notifs', JSON.stringify(notifications));
+      renderNotifications();
+    }
+
+    function renderNotifications() {
+      const unreadCount = notifications.filter(n => !n.read).length;
+      const badge = document.getElementById('notifUnreadBadge');
+      const headerCount = document.getElementById('notifHeaderCount');
+
+      badge.textContent = unreadCount;
+      badge.classList.toggle('hidden', unreadCount === 0);
+      if (headerCount) headerCount.textContent = `${unreadCount} yangi`;
+
+      const listEl = document.getElementById('notificationList');
+      if (!listEl) return;
+
+      if (notifications.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-mute py-6 text-center">Hozircha bildirishnomalar yo'q</p>`;
+        return;
+      }
+
+      listEl.innerHTML = notifications.map(n => `
+        <div onclick="markSingleNotifRead('${n.id}')" class="p-3 rounded-xl cursor-pointer transition border ${n.read ? 'surface-card opacity-75' : 'bg-sky-500/10 border-sky-500/40'}">
+          <div class="flex items-center justify-between gap-2">
+            <h5 class="font-extrabold text-xs text-main">${n.title}</h5>
+            <span class="text-[10px] font-mono text-mute shrink-0">${n.time}</span>
+          </div>
+          <p class="text-xs text-sub mt-1 leading-snug">${n.body}</p>
+        </div>
+      `).join('');
+    }
+
+    function markSingleNotifRead(id) {
+      notifications = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+      localStorage.setItem('kitobuz_v6_notifs', JSON.stringify(notifications));
+      renderNotifications();
+    }
+
+    function markAllNotificationsRead() {
+      notifications = notifications.map(n => ({ ...n, read: true }));
+      localStorage.setItem('kitobuz_v6_notifs', JSON.stringify(notifications));
+      renderNotifications();
+      showToast('Barcha bildirishnomalar o‘qilgan deb belgilandi');
+    }
+
+    function clearAllNotifications() {
+      notifications = [];
+      localStorage.setItem('kitobuz_v6_notifs', JSON.stringify(notifications));
+      renderNotifications();
+    }
+
+    // 6. CATALOG FILTERS & HIGH-CONTRAST BENTO GRID
+    function renderFilters() {
+      const genreBox = document.getElementById('genreList');
+      genreBox.innerHTML = genres.map(g => `
+        <label class="flex items-center justify-between cursor-pointer group py-0.5">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" ${selectedGenres.includes(g) ? 'checked' : ''} onchange="toggleGenreFilter('${g}')" class="w-4 h-4 rounded accent-sky-600" />
+            <span class="font-semibold text-main group-hover:text-sky-600 dark:group-hover:text-sky-400 transition">${g}</span>
+          </div>
+          <span class="text-xs font-bold px-2 py-0.5 rounded-md surface-input text-sub">${books.filter(b => b.genre === g).length}</span>
+        </label>
+      `).join('');
+
+      const langBox = document.getElementById('langList');
+      langBox.innerHTML = languages.map(l => `
+        <label class="flex items-center justify-between cursor-pointer group py-0.5">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" ${selectedLangs.includes(l) ? 'checked' : ''} onchange="toggleLangFilter('${l}')" class="w-4 h-4 rounded accent-sky-600" />
+            <span class="font-semibold text-main group-hover:text-sky-600 dark:group-hover:text-sky-400 transition">${l}</span>
+          </div>
+          <span class="text-xs font-bold px-2 py-0.5 rounded-md surface-input text-sub">${books.filter(b => b.lang === l).length}</span>
+        </label>
+      `).join('');
+
+      const admGenre = document.getElementById('newBookGenre');
+      const admLang = document.getElementById('newBookLang');
+      if (admGenre) admGenre.innerHTML = genres.map(g => `<option value="${g}">${g}</option>`).join('');
+      if (admLang) admLang.innerHTML = languages.map(l => `<option value="${l}">${l}</option>`).join('');
+    }
+
+    function toggleGenreFilter(genre) {
+      selectedGenres = selectedGenres.includes(genre)
+        ? selectedGenres.filter(x => x !== genre)
+        : [...selectedGenres, genre];
+      renderCatalog();
+    }
+
+    function toggleLangFilter(lang) {
+      selectedLangs = selectedLangs.includes(lang)
+        ? selectedLangs.filter(x => x !== lang)
+        : [...selectedLangs, lang];
+      renderCatalog();
+    }
+
+    function setFormatFilter(fmt) {
+      selectedFormat = fmt;
+      document.querySelectorAll('.fmt-btn').forEach(btn => {
+        btn.className = 'fmt-btn py-2 px-2.5 rounded-xl surface-input font-semibold text-xs hover:border-sky-500';
+      });
+      const activeBtn = document.getElementById('fmt_' + fmt);
+      if (activeBtn) {
+        activeBtn.className = 'fmt-btn py-2 px-2.5 rounded-xl border-2 border-sky-600 bg-sky-500/15 text-sky-800 dark:text-sky-300 font-extrabold text-xs';
+      }
+      renderCatalog();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.trim().toLowerCase();
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', !searchQuery);
+      renderCatalog();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      handleSearch('');
+    }
+
+    function resetAllFilters() {
+      selectedGenres = [];
+      selectedLangs = [];
+      selectedFormat = 'all';
+      clearSearch();
+      setFormatFilter('all');
+      renderFilters();
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const grid = document.getElementById('booksGrid');
+      const sortBy = document.getElementById('sortSelect').value;
+
+      let filtered = books.filter(b => {
+        const matchQuery = !searchQuery ||
+          b.title.toLowerCase().includes(searchQuery) ||
+          b.author.toLowerCase().includes(searchQuery) ||
+          b.genre.toLowerCase().includes(searchQuery);
+        const matchGenre = selectedGenres.length === 0 || selectedGenres.includes(b.genre);
+        const matchLang = selectedLangs.length === 0 || selectedLangs.includes(b.lang);
+        const matchFmt =
+          selectedFormat === 'all' ||
+          (selectedFormat === 'audio' && b.hasAudio) ||
+          (selectedFormat === 'pdf' && b.hasPdf) ||
+          (selectedFormat === 'word' && b.hasWord);
+        return matchQuery && matchGenre && matchLang && matchFmt;
+      });
+
+      if (sortBy === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+      if (sortBy === 'title') filtered.sort((a, b) => a.title.localeCompare(b.title));
+      if (sortBy === 'newest') filtered.reverse();
+
+      document.getElementById('totalBooksCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full surface-panel rounded-2xl p-10 text-center space-y-3">
+            <p class="text-lg font-extrabold text-main">Tanlangan mezonlar bo'yicha kitob topilmadi</p>
+            <p class="text-xs text-sub">Qidiruv so'zini o'zgartiring yoki filtrlarni tozalang</p>
+            <button onclick="resetAllFilters()" class="px-5 py-2.5 rounded-xl bg-sky-600 text-white text-xs font-extrabold">Barcha kitoblarni ko'rsatish</button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(book => {
+        const isSaved = shelfItems.some(item => item.bookId === book.id);
+        const stars = '★'.repeat(Math.round(book.rating)) + '☆'.repeat(5 - Math.round(book.rating));
+
+        return `
+          <article class="group surface-card rounded-2xl p-4 flex flex-col justify-between relative">
+            <!-- Bookmark Button -->
+            <button
+              onclick="toggleBookmark('${book.id}', event)"
+              class="absolute top-6 right-6 z-20 w-8 h-8 rounded-xl bg-slate-900/75 hover:bg-sky-600 text-white flex items-center justify-center shadow transition"
+              title="${isSaved ? 'Javondan olib tashlash' : 'Shaxsiy javonga saqlash'}"
+            >
+              <svg class="w-4 h-4 ${isSaved ? 'fill-sky-400 text-sky-400' : 'text-white'}" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
+
+            <!-- 3D Book Stage -->
+            <div onclick="openReaderModal('${book.id}')" class="book-3d-stage rounded-xl h-48 flex items-center justify-center cursor-pointer p-4">
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-lg bg-slate-900/80 text-white text-[10px] font-extrabold tracking-wide z-10">
+                ${book.genre}
+              </span>
+              <div class="book-3d bg-gradient-to-br ${book.coverStyle} p-3 flex flex-col justify-between text-white select-none overflow-hidden">
+                ${book.coverImg ? `<img src="${book.coverImg}" class="absolute inset-0 w-full h-full object-cover opacity-90" />` : ''}
+                <div class="relative z-10 text-[8px] uppercase tracking-widest text-amber-200 font-mono truncate">${book.genre}</div>
+                <div class="relative z-10 my-auto">
+                  <p class="font-serif font-bold text-xs leading-snug line-clamp-3 drop-shadow">${book.title}</p>
+                </div>
+                <div class="relative z-10 text-[9px] text-slate-100 truncate border-t border-white/25 pt-1 font-medium">${book.author}</div>
+              </div>
+            </div>
+
+            <!-- Book Details (High Contrast in Day & Night) -->
+            <div class="mt-3">
+              <div class="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                <span class="text-[10px] px-2 py-0.5 rounded-md badge-lang">${book.lang}</span>
+                ${book.hasAudio ? '<span class="text-[10px] px-2 py-0.5 rounded-md badge-audio">🎧 Audio</span>' : ''}
+                ${book.hasPdf ? '<span class="text-[10px] px-2 py-0.5 rounded-md badge-pdf">📕 PDF</span>' : ''}
+                ${book.hasWord ? '<span class="text-[10px] px-2 py-0.5 rounded-md badge-word">📘 Word</span>' : ''}
+              </div>
+
+              <h3 onclick="openReaderModal('${book.id}')" class="font-extrabold text-base text-main truncate cursor-pointer hover:text-sky-600 dark:hover:text-sky-400 transition" title="${book.title}">
+                ${book.title}
+              </h3>
+              <p class="text-xs font-semibold text-sub truncate">${book.author}</p>
+
+              <div class="mt-3 pt-2.5 border-t border-slate-300/70 dark:border-slate-800 flex items-center justify-between">
+                <div class="text-amber-500 dark:text-sky-400 text-xs font-bold tracking-wider">
+                  ${stars} <span class="text-sub text-[11px] font-extrabold ml-0.5">${book.rating}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="playBookById('${book.id}')" class="p-1.5 rounded-lg badge-audio hover:bg-sky-600 hover:text-white text-xs transition" title="Audiokitobni tinglash">
+                    🎧
+                  </button>
+                  <button onclick="openReaderModal('${book.id}')" class="px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold shadow-sm transition">
+                    O'qish
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // 7. FIXED PERSONAL PROFILE, BOOKSHELF & MUTOLAA GOAL WIDGET
+    function toggleBookmark(bookId, e) {
+      if (e) e.stopPropagation();
+      const exists = shelfItems.find(item => item.bookId === bookId);
+      if (exists) {
+        shelfItems = shelfItems.filter(item => item.bookId !== bookId);
+        showToast('Kitob javondan olib tashlandi');
+      } else {
+        shelfItems.push({ bookId, status: 'reading' });
+        showToast('Kitob shaxsiy javonga saqlandi 🔖');
+      }
+      localStorage.setItem('kitobuz_v6_shelf', JSON.stringify(shelfItems));
+      updateShelfBadge();
+      updateMutolaaGoalWidget();
+      renderCatalog();
+    }
+
+    function updateShelfBadge() {
+      document.getElementById('shelfCountBadge').textContent = shelfItems.length;
+    }
+
+    function updateMutolaaGoalWidget() {
+      const completedCount = shelfItems.filter(i => i.status === 'completed').length || 1;
+      const goal = (currentUser && currentUser.goal) ? currentUser.goal : 25;
+      const pct = Math.min(100, Math.round((completedCount / goal) * 100));
+
+      document.getElementById('widgetGoalCurrent').textContent = completedCount;
+      document.getElementById('widgetGoalTarget').textContent = goal;
+      document.getElementById('widgetGoalPercent').textContent = pct + '%';
+      document.getElementById('widgetGoalBar').style.width = pct + '%';
+
+      const lastBook = books.find(b => b.id === lastReadBookId) || books[0];
+      if (lastBook) {
+        document.getElementById('lastReadBookTitle').textContent = lastBook.title;
+        document.getElementById('continueLastReadBtn').onclick = () => openReaderModal(lastBook.id);
+      }
+    }
+
+    function openProfileModal(defaultTab = 'shelf') {
+      if (!currentUser) {
+        syncAuthGateVisibility();
+        return;
+      }
+      const modal = document.getElementById('profileModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      document.getElementById('profileFullName').textContent = currentUser.name;
+      document.getElementById('profileEmailHandle').textContent = `@${currentUser.username} • ${currentUser.email}`;
+      document.getElementById('profileBioDisplay').textContent = currentUser.bio || 'KitobUz faol kitobxoni';
+      document.getElementById('profileRoleBadge').textContent = currentUser.role === 'admin' ? 'Super Admin' : 'Kitobxon';
+      document.getElementById('profileAvatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.username)}`;
+      document.getElementById('openAdminFromProfileBtn').classList.toggle('hidden', currentUser.role !== 'admin');
+
+      document.getElementById('editProfileName').value = currentUser.name || '';
+      document.getElementById('editProfileUsername').value = currentUser.username || '';
+      document.getElementById('editProfileBio').value = currentUser.bio || '';
+      document.getElementById('editProfileGoal').value = currentUser.goal || 25;
+
+      switchProfileTab(defaultTab === 'stats' ? 'profile' : defaultTab);
+      renderShelfItemsInModal();
+      renderSavedQuotesInModal();
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+      document.getElementById('profileModal').classList.remove('flex');
+    }
+
+    function switchProfileTab(tab) {
+      ['shelf', 'quotes', 'profile'].forEach(t => {
+        document.getElementById('profContent_' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('profTab_' + t).className = t === tab
+          ? 'px-4 py-2 rounded-xl text-xs font-extrabold bg-sky-600 text-white'
+          : 'px-4 py-2 rounded-xl text-xs font-extrabold surface-input text-main';
+      });
+    }
+
+    function setShelfStatusFilter(status) {
+      currentShelfFilter = status;
+      ['all', 'reading', 'planned', 'completed'].forEach(s => {
+        document.getElementById('shelfFilter_' + s).className = s === status
+          ? 'px-3 py-1.5 rounded-xl bg-sky-600 text-white'
+          : 'px-3 py-1.5 rounded-xl surface-input text-main';
+      });
+      renderShelfItemsInModal();
+    }
+
+    function renderShelfItemsInModal() {
+      const filteredShelf = shelfItems.filter(i => currentShelfFilter === 'all' || i.status === currentShelfFilter);
+      document.getElementById('profileShelfCount').textContent = `${filteredShelf.length} ta kitob`;
+
+      const listEl = document.getElementById('savedBooksList');
+      if (filteredShelf.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-sub col-span-full py-6 text-center">Ushbu bo'limda hozircha kitoblar yo'q.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = filteredShelf.map(item => {
+        const b = books.find(x => x.id === item.bookId);
+        if (!b) return '';
+        return `
+          <div class="p-3.5 rounded-2xl surface-card flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h5 class="font-extrabold text-sm text-main truncate">${b.title}</h5>
+              <p class="text-xs text-sub truncate">${b.author} • ${b.genre}</p>
+              <select onchange="changeBookShelfStatus('${b.id}', this.value)" class="mt-1.5 px-2 py-1 rounded-lg surface-input text-[11px] font-bold">
+                <option value="reading" ${item.status === 'reading' ? 'selected' : ''}>📖 O'qiyapman</option>
+                <option value="planned" ${item.status === 'planned' ? 'selected' : ''}>📌 Rejada</option>
+                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>✅ O'qib bo'ldim</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="closeProfileModal(); openReaderModal('${b.id}')" class="px-3 py-1.5 rounded-xl bg-sky-600 text-white text-xs font-extrabold">O'qish</button>
+              <button onclick="toggleBookmark('${b.id}'); renderShelfItemsInModal();" class="p-1.5 rounded-xl bg-rose-500/15 text-rose-500 font-bold text-xs">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function changeBookShelfStatus(bookId, newStatus) {
+      const idx = shelfItems.findIndex(i => i.bookId === bookId);
+      if (idx !== -1) {
+        shelfItems[idx].status = newStatus;
+      } else {
+        shelfItems.push({ bookId, status: newStatus });
+      }
+      localStorage.setItem('kitobuz_v6_shelf', JSON.stringify(shelfItems));
+      updateShelfBadge();
+      updateMutolaaGoalWidget();
+      renderShelfItemsInModal();
+      showToast('Kitob holati yangilandi!');
+    }
+
+    function renderSavedQuotesInModal() {
+      const box = document.getElementById('savedQuotesList');
+      if (savedQuotes.length === 0) {
+        box.innerHTML = `<p class="text-xs text-sub py-6 text-center">Mutolaa oynasida matnni belgilab "✍️ Iqtibos" tugmasini bosing.</p>`;
+        return;
+      }
+      box.innerHTML = savedQuotes.map(q => `
+        <div class="p-3.5 rounded-2xl surface-card border-l-4 border-l-amber-500 flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs sm:text-sm italic font-serif text-main">"${q.text}"</p>
+            <p class="text-[11px] font-bold text-sub mt-1">— ${q.bookTitle} (${q.date})</p>
+          </div>
+          <button onclick="deleteSavedQuote('${q.id}')" class="text-xs text-rose-500 font-bold">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteSavedQuote(id) {
+      savedQuotes = savedQuotes.filter(q => q.id !== id);
+      localStorage.setItem('kitobuz_v6_quotes', JSON.stringify(savedQuotes));
+      renderSavedQuotesInModal();
+    }
+
+    function saveProfileChanges() {
+      if (!currentUser) return;
+      currentUser.name = document.getElementById('editProfileName').value.trim() || currentUser.name;
+      currentUser.username = document.getElementById('editProfileUsername').value.trim().replace(/^@/, '') || currentUser.username;
+      currentUser.bio = document.getElementById('editProfileBio').value.trim();
+      currentUser.goal = parseInt(document.getElementById('editProfileGoal').value, 10) || 25;
+
+      localStorage.setItem('kitobuz_v6_current_user', JSON.stringify(currentUser));
+      users = users.map(u => u.email === currentUser.email ? currentUser : u);
+      localStorage.setItem('kitobuz_v6_users', JSON.stringify(users));
+
+      updateUserNavbar();
+      updateMutolaaGoalWidget();
+      openProfileModal('profile');
+      showToast('Shaxsiy profil ma’lumotlari yangilandi!');
+    }
+
+    // 8. MUTOLAA APP-STYLE READER MODAL
+    function openReaderModal(bookId) {
+      const book = books.find(b => b.id === bookId);
+      if (!book) return;
+
+      activeReaderBookId = book.id;
+      lastReadBookId = book.id;
+      localStorage.setItem('kitobuz_v6_last_read', book.id);
+      updateMutolaaGoalWidget();
+
+      document.getElementById('readerGenreBadge').textContent = `${book.genre} • ${book.lang}`;
+      document.getElementById('readerTitle').textContent = book.title;
+      document.getElementById('readerAuthor').textContent = book.author;
+
+      const shelfEntry = shelfItems.find(i => i.bookId === book.id);
+      document.getElementById('readerShelfStatusSelect').value = shelfEntry ? shelfEntry.status : 'reading';
+
+      document.getElementById('readerListenBtn').onclick = () => {
+        closeReaderModal();
+        playBookById(book.id);
+      };
+
+      const dlBtn = document.getElementById('readerDownloadBtn');
+      const bodyEl = document.getElementById('readerBody');
+
+      if (book.pdfUrl) {
+        dlBtn.href = book.pdfUrl;
+        dlBtn.download = `${book.title}.pdf`;
+        dlBtn.classList.remove('hidden');
+        bodyEl.innerHTML = `
+          <iframe src="${book.pdfUrl}" class="w-full h-[60vh] rounded-2xl border border-slate-400"></iframe>
+          <div class="mt-4 p-4 rounded-2xl bg-black/5 dark:bg-white/5 text-sm whitespace-pre-line">${book.content || ''}</div>
+        `;
+      } else {
+        dlBtn.classList.add('hidden');
+        bodyEl.style.fontSize = readerFontSize + 'px';
+        bodyEl.innerHTML = `<div class="whitespace-pre-line leading-relaxed max-w-2xl mx-auto">${book.content || 'Ushbu kitob uchun matn kiritilmagan.'}</div>`;
+      }
+
+      document.getElementById('readerProgressBar').style.width = '12%';
+      document.getElementById('readerProgressLabel').textContent = '12% o‘qildi';
+
+      document.getElementById('readerModal').classList.remove('hidden');
+      document.getElementById('readerModal').classList.add('flex');
+    }
+
+    function closeReaderModal() {
+      document.getElementById('readerModal').classList.add('hidden');
+      document.getElementById('readerModal').classList.remove('flex');
+    }
+
+    function setReaderPaperTheme(mode) {
+      const container = document.getElementById('readerContainer');
+      container.classList.remove('reader-paper-day', 'reader-paper-sepia', 'reader-paper-night');
+      container.classList.add('reader-paper-' + mode);
+    }
+
+    function changeReaderFontSize(delta) {
+      readerFontSize = Math.min(28, Math.max(13, readerFontSize + delta));
+      document.getElementById('readerBody').style.fontSize = readerFontSize + 'px';
+    }
+
+    function handleReaderScroll(el) {
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      const pct = maxScroll > 0 ? Math.min(100, Math.max(5, Math.round((el.scrollTop / maxScroll) * 100))) : 100;
+      document.getElementById('readerProgressBar').style.width = pct + '%';
+      document.getElementById('readerProgressLabel').textContent = pct + '% o‘qildi';
+    }
+
+    function saveSelectedQuote() {
+      const sel = window.getSelection().toString().trim();
+      const book = books.find(b => b.id === activeReaderBookId);
+      const quoteText = sel || (book ? book.content.slice(0, 110) + '...' : '');
+      if (!quoteText) return;
+
+      savedQuotes.unshift({
+        id: 'q_' + Date.now(),
+        bookTitle: book ? book.title : 'KitobUz',
+        text: quoteText,
+        date: new Date().toLocaleDateString('uz-UZ')
+      });
+      localStorage.setItem('kitobuz_v6_quotes', JSON.stringify(savedQuotes));
+      showToast('✍️ Iqtibos shaxsiy javoningizga saqlandi!');
+    }
+
+    function updateBookShelfStatusFromReader(status) {
+      changeBookShelfStatus(activeReaderBookId, status);
+    }
+
+    // 9. AUDIOBOOK PLAYER ENGINE (WITH SPEED CONTROL & MOBILE COLLAPSE)
+    function initWaveformBars() {
+      const container = document.getElementById('waveformContainer');
+      const heights = [35, 60, 45, 85, 55, 95, 50, 75, 85, 45, 90, 65, 40, 80, 100, 60, 45, 85, 55, 70, 50, 90, 65, 45];
+      container.innerHTML = heights.map((h, i) => `
+        <div class="wave-bar" style="height: ${h}%; animation-delay: ${(i * 0.05).toFixed(2)}s"></div>
+      `).join('');
+    }
+
+    function toggleMinimizePlayer() {
+      isPlayerMinimized = !isPlayerMinimized;
+      document.getElementById('playerExpandedBody').classList.toggle('hidden', isPlayerMinimized);
+      document.getElementById('playerCollapseIcon').textContent = isPlayerMinimized ? '▴' : '▾';
+    }
+
+    function cyclePlaybackSpeed() {
+      currentSpeedIndex = (currentSpeedIndex + 1) % playbackSpeeds.length;
+      const spd = playbackSpeeds[currentSpeedIndex];
+      document.getElementById('playerSpeedBtn').textContent = spd + 'x';
+      const audioEl = document.getElementById('realAudioElement');
+      if (audioEl) audioEl.playbackRate = spd;
+      showToast(`Audio tezligi: ${spd}x`);
+    }
+
+    function playBookById(bookId) {
+      const idx = books.findIndex(b => b.id === bookId);
+      if (idx !== -1) {
+        currentAudioBookIndex = idx;
+        loadPlayerBook(books[idx], true);
+      }
+    }
+
+    function loadPlayerBook(book, autoPlay = false) {
+      if (!book) return;
+      const audioEl = document.getElementById('realAudioElement');
+      stopAudioPlayback();
+
+      document.getElementById('playerTitle').textContent = book.title;
+      document.getElementById('playerAuthor').textContent = book.author;
+      document.getElementById('playerDuration').textContent = book.duration || '3:25';
+      document.getElementById('playerCurrentTime').textContent = '0:00';
+      document.getElementById('playerSourceBadge').textContent = book.audioUrl ? 'MP3 Audio' : 'Synth Audio';
+
+      if (book.audioUrl) {
+        audioEl.src = book.audioUrl;
+        audioEl.playbackRate = playbackSpeeds[currentSpeedIndex];
+        audioEl.onloadedmetadata = () => {
+          document.getElementById('playerDuration').textContent = formatSeconds(Math.floor(audioEl.duration));
+        };
+        audioEl.ontimeupdate = () => {
+          document.getElementById('playerCurrentTime').textContent = formatSeconds(Math.floor(audioEl.currentTime));
+        };
+        audioEl.onended = () => stopAudioPlayback();
+      } else {
+        audioEl.removeAttribute('src');
+      }
+
+      if (autoPlay) togglePlayAudio();
+    }
+
+    function togglePlayAudio() {
+      const book = books[currentAudioBookIndex] || books[0];
+      const audioEl = document.getElementById('realAudioElement');
+      const widget = document.getElementById('audioPlayerWidget');
+      const btn = document.getElementById('playPauseBtn');
+
+      if (isPlaying) {
+        stopAudioPlayback();
+        return;
+      }
+
+      isPlaying = true;
+      btn.textContent = '⏸';
+      widget.classList.add('playing');
+
+      if (book && book.audioUrl) {
+        audioEl.play().catch(() => {});
+      } else {
+        synthInterval = setInterval(() => {
+          synthSeconds++;
+          document.getElementById('playerCurrentTime').textContent = formatSeconds(synthSeconds);
+          playGentleTone();
+        }, Math.round(1000 / playbackSpeeds[currentSpeedIndex]));
+      }
+    }
+
+    function stopAudioPlayback() {
+      const audioEl = document.getElementById('realAudioElement');
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = '▶';
+      document.getElementById('audioPlayerWidget').classList.remove('playing');
+      audioEl.pause();
+      if (synthInterval) clearInterval(synthInterval);
+    }
+
+    function playGentleTone() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00];
+        osc.frequency.value = notes[synthSeconds % notes.length];
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.014, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.65);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.65);
+      } catch (e) {}
+    }
+
+    function prevNextAudio(dir) {
+      synthSeconds = 0;
+      currentAudioBookIndex = (currentAudioBookIndex + dir + books.length) % books.length;
+      loadPlayerBook(books[currentAudioBookIndex], true);
+    }
+
+    function skipAudio(sec) {
+      const audioEl = document.getElementById('realAudioElement');
+      if (audioEl.src) {
+        audioEl.currentTime = Math.max(0, audioEl.currentTime + sec);
+      } else {
+        synthSeconds = Math.max(0, synthSeconds + sec);
+        document.getElementById('playerCurrentTime').textContent = formatSeconds(synthSeconds);
+      }
+    }
+
+    function seekAudio(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      synthSeconds = Math.floor(ratio * 205);
+      document.getElementById('playerCurrentTime').textContent = formatSeconds(synthSeconds);
+    }
+
+    function formatSeconds(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // 10. ADMIN PANEL: BOOKS, TELEGRAM BOT API & FIREBASE DATABASE
+    function openAdminModal() {
+      if (!currentUser || currentUser.role !== 'admin') {
+        showToast('Faqat administratorlar uchun ruxsat berilgan!');
+        return;
+      }
+      renderFilters();
+      renderAdminTables();
+      loadAdminConfigInputs();
+      document.getElementById('adminModal').classList.remove('hidden');
+      document.getElementById('adminModal').classList.add('flex');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+      document.getElementById('adminModal').classList.remove('flex');
+    }
+
+    function switchAdminTab(tab) {
+      ['books', 'telegram', 'firebase', 'categories', 'security'].forEach(t => {
+        document.getElementById('admContent_' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('admTab_' + t).className = t === tab
+          ? 'adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold bg-sky-600 text-white'
+          : 'adm-tab px-3.5 py-2 rounded-xl text-xs font-extrabold surface-input text-main';
+      });
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function extractWordText(file) {
+      if (file.name.endsWith('.txt')) return await file.text();
+      if (window.mammoth && file.name.endsWith('.docx')) {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await window.mammoth.extractRawText({ arrayBuffer });
+        return result.value;
+      }
+      return '';
+    }
+
+    async function handleAddBook(e) {
+      e.preventDefault();
+      const title = document.getElementById('newBookTitle').value.trim();
+      const author = document.getElementById('newBookAuthor').value.trim();
+      const genre = document.getElementById('newBookGenre').value;
+      const lang = document.getElementById('newBookLang').value;
+      const coverStyle = document.getElementById('newBookCoverStyle').value;
+      let content = document.getElementById('newBookContent').value.trim();
+      const notifyTg = document.getElementById('notifyTelegramOnAdd').checked;
+
+      const coverFile = document.getElementById('newBookCoverFile').files[0];
+      const audioFile = document.getElementById('newBookAudioFile').files[0];
+      const pdfFile = document.getElementById('newBookPdfFile').files[0];
+      const wordFile = document.getElementById('newBookWordFile').files[0];
+
+      let coverImg = '';
+      let audioUrl = '';
+      let pdfUrl = '';
+
+      if (coverFile) coverImg = await readFileAsDataURL(coverFile);
+      if (audioFile) audioUrl = URL.createObjectURL(audioFile);
+      if (pdfFile) pdfUrl = URL.createObjectURL(pdfFile);
+      if (wordFile) {
+        const extracted = await extractWordText(wordFile);
+        if (extracted) content = content ? content + '\n\n' + extracted : extracted;
+      }
+
+      const newBook = {
+        id: 'b_' + Date.now(),
+        title,
+        author,
+        genre,
+        lang,
+        rating: 5.0,
+        coverStyle,
+        coverImg,
+        duration: '4:10',
+        hasAudio: Boolean(audioFile),
+        hasPdf: Boolean(pdfFile),
+        hasWord: Boolean(wordFile || content),
+        audioUrl,
+        pdfUrl,
+        content: content || `${title} — ${author} qalamiga mansub asar.`
+      };
+
+      books.unshift(newBook);
+      saveBooksToStorage();
+      renderCatalog();
+      renderFilters();
+      renderAdminTables();
+      addNotification(`📚 Yangi kitob: ${title}`, `${author}ning "${title}" asari katalogga qo'shildi.`);
+
+      if (notifyTg && tgConfig.botToken && tgConfig.adminChatId) {
+        const htmlMsg =
+          `📚 <b>KitobUz katalogiga yangi kitob qo'shildi!</b>\n\n` +
+          `📖 <b>Nomi:</b> ${escapeTgHtml(title)}\n` +
+          `✍️ <b>Muallif:</b> ${escapeTgHtml(author)}\n` +
+          `🗂 <b>Janr:</b> ${escapeTgHtml(genre)} (${escapeTgHtml(lang)})`;
+        const plainMsg = `KitobUz yangi kitob: ${title} — ${author} (${genre}, ${lang})`;
+        await sendTelegramMessageSafe(tgConfig.botToken, tgConfig.adminChatId, htmlMsg, plainMsg);
+      }
+
+      e.target.reset();
+      showToast(`"${title}" kitobi muvaffaqiyatli qo'shildi!`);
+    }
+
+    function deleteBookByAdmin(bookId) {
+      books = books.filter(b => b.id !== bookId);
+      saveBooksToStorage();
+      renderCatalog();
+      renderFilters();
+      renderAdminTables();
+      showToast('Kitob katalogdan o‘chirildi.');
+    }
+
+    function saveBooksToStorage() {
+      try {
+        localStorage.setItem('kitobuz_v6_books', JSON.stringify(books));
+      } catch (e) {}
+    }
+
+    function renderAdminTables() {
+      document.getElementById('adminTotalBooksLabel').textContent = books.length;
+      const table = document.getElementById('adminBooksTable');
+      table.innerHTML = books.map(b => `
+        <div class="p-3 rounded-xl surface-card flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-extrabold text-sm text-main truncate">${b.title} <span class="text-xs font-semibold text-sub">— ${b.author}</span></p>
+            <p class="text-[11px] font-semibold text-mute">${b.genre} • ${b.lang} ${b.hasAudio ? '• 🎧 Audio' : ''} ${b.hasPdf ? '• 📕 PDF' : ''} ${b.hasWord ? '• 📘 Word' : ''}</p>
+          </div>
+          <button onclick="deleteBookByAdmin('${b.id}')" class="px-3 py-1.5 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white text-xs font-extrabold transition shrink-0">
+            O'chirish
+          </button>
+        </div>
+      `).join('');
+
+      document.getElementById('adminGenreTags').innerHTML = genres.map(g => `
+        <span class="px-3 py-1 rounded-full badge-audio text-xs flex items-center gap-1.5">
+          ${g} <button onclick="removeGenre('${g}')" class="hover:text-rose-500 font-bold">✕</button>
+        </span>
+      `).join('');
+
+      document.getElementById('adminLangTags').innerHTML = languages.map(l => `
+        <span class="px-3 py-1 rounded-full badge-word text-xs flex items-center gap-1.5">
+          ${l} <button onclick="removeLang('${l}')" class="hover:text-rose-500 font-bold">✕</button>
+        </span>
+      `).join('');
+    }
+
+    function addGenreByAdmin() {
+      const val = document.getElementById('newGenreInput').value.trim();
+      if (val && !genres.includes(val)) {
+        genres.push(val);
+        localStorage.setItem('kitobuz_v6_genres', JSON.stringify(genres));
+        document.getElementById('newGenreInput').value = '';
+        renderFilters();
+        renderAdminTables();
+      }
+    }
+
+    function removeGenre(g) {
+      genres = genres.filter(x => x !== g);
+      localStorage.setItem('kitobuz_v6_genres', JSON.stringify(genres));
+      renderFilters();
+      renderAdminTables();
+    }
+
+    function addLangByAdmin() {
+      const val = document.getElementById('newLangInput').value.trim();
+      if (val && !languages.includes(val)) {
+        languages.push(val);
+        localStorage.setItem('kitobuz_v6_langs', JSON.stringify(languages));
+        document.getElementById('newLangInput').value = '';
+        renderFilters();
+        renderAdminTables();
+      }
+    }
+
+    function removeLang(l) {
+      languages = languages.filter(x => x !== l);
+      localStorage.setItem('kitobuz_v6_langs', JSON.stringify(languages));
+      renderFilters();
+      renderAdminTables();
+    }
+
+    // TELEGRAM BOT & FIREBASE ADMIN CONFIGS
+    function loadAdminConfigInputs() {
+      document.getElementById('tgBotUsernameInput').value = tgConfig.botUsername || 'KitobUz_AuthBot';
+      document.getElementById('tgBotTokenInput').value = tgConfig.botToken || '';
+      document.getElementById('tgAdminChatIdInput').value = tgConfig.adminChatId || '1686406789';
+
+      document.getElementById('fbDbUrl').value = fbConfig.dbUrl || '';
+      document.getElementById('fbApiKey').value = fbConfig.apiKey || '';
+      document.getElementById('fbProjectId').value = fbConfig.projectId || '';
+      document.getElementById('fbAppId').value = fbConfig.appId || '';
+      document.getElementById('adminNewLogin').value = adminCreds.login || 'admin';
+
+      updateFirebaseBadge();
+    }
+
+    function saveTelegramBotConfig() {
+      tgConfig = {
+        botUsername: document.getElementById('tgBotUsernameInput').value.trim().replace(/^@/, '') || 'KitobUz_AuthBot',
+        botToken: document.getElementById('tgBotTokenInput').value.trim(),
+        adminChatId: document.getElementById('tgAdminChatIdInput').value.trim()
+      };
+      localStorage.setItem('kitobuz_v6_tg', JSON.stringify(tgConfig));
+      syncAuthGateVisibility();
+      showToast('🤖 Telegram Bot sozlamalari saqlandi!');
+    }
+
+    // BOTGA /START BOSGAN OXIRGI FOYDALANUVCHI CHAT ID RAQAMINI TOPISH
+    async function fetchLatestChatIdFromBot() {
+      saveTelegramBotConfig();
+      const fbEl = document.getElementById('tgApiFeedback');
+      fbEl.classList.remove('hidden');
+
+      if (!tgConfig.botToken) {
+        fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-rose-500';
+        fbEl.textContent = '❌ Avval Telegram Bot Token (HTTP API) maydonini to‘ldiring!';
+        return;
+      }
+
+      fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-sky-600 dark:text-sky-400';
+      fbEl.textContent = '⏳ Bot ma’lumotlari va oxirgi xabarlar tekshirilmoqda...';
+
+      try {
+        // 1. Botning o'z username'ini getMe orqali aniqlash
+        const meRes = await fetch(`https://api.telegram.org/bot${tgConfig.botToken}/getMe`);
+        const meData = await meRes.json();
+        if (meData.ok && meData.result && meData.result.username) {
+          document.getElementById('tgBotUsernameInput').value = meData.result.username;
+          tgConfig.botUsername = meData.result.username;
+        }
+
+        // 2. getUpdates orqali Chat ID topish
+        const res = await fetch(`https://api.telegram.org/bot${tgConfig.botToken}/getUpdates`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-rose-500';
+          fbEl.textContent = `❌ Telegram API xatosi: ${data.description || 'Token noto‘g‘ri'}`;
+          return;
+        }
+
+        const updates = data.result || [];
+        const lastWithChat = [...updates].reverse().find(u =>
+          (u.message && u.message.chat) || (u.my_chat_member && u.my_chat_member.chat)
+        );
+
+        if (lastWithChat) {
+          const chat = (lastWithChat.message && lastWithChat.message.chat) || lastWithChat.my_chat_member.chat;
+          document.getElementById('tgAdminChatIdInput').value = String(chat.id);
+          saveTelegramBotConfig();
+          fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-emerald-600 dark:text-emerald-400';
+          fbEl.textContent = `✅ Bot (@${tgConfig.botUsername}) va Chat ID topildi: ${chat.id} (${chat.first_name || chat.title || 'Foydalanuvchi'}). Endi "Botga test xabar yuborish" tugmasini bosing!`;
+        } else {
+          fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-amber-600 dark:text-amber-400';
+          fbEl.textContent = `⚠️ Bot (@${tgConfig.botUsername}) ulandi, ammo yangi xabar topilmadi. Telegramda botingizga kirib /start bosing yoki o'zingizning Chat ID raqamingizni (masalan: 1686406789) yozing.`;
+        }
+      } catch (err) {
+        fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-rose-500';
+        fbEl.textContent = '❌ Tarmoq xatosi: Internet ulanishini yoki Bot Token to‘g‘riligini tekshiring.';
+      }
+    }
+
+    async function testTelegramBotConnection() {
+      saveTelegramBotConfig();
+      const fbEl = document.getElementById('tgApiFeedback');
+      fbEl.classList.remove('hidden');
+
+      if (!tgConfig.botToken || !tgConfig.adminChatId) {
+        fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-amber-600 dark:text-amber-400';
+        fbEl.textContent = '⚠️ Real xabar yuborish uchun Bot Token va Admin Chat ID (masalan: 1686406789) kiriting.';
+        return;
+      }
+
+      fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-sky-600 dark:text-sky-400';
+      fbEl.textContent = '⏳ Telegram botga test xabar yuborilmoqda...';
+
+      const nowStr = new Date().toLocaleString('uz-UZ');
+      const htmlMsg =
+        `✅ <b>KitobUz Admin Panel: Telegram Bot muvaffaqiyatli ulandi!</b>\n\n` +
+        `🤖 <b>Bot:</b> @${escapeTgHtml(tgConfig.botUsername)}\n` +
+        `🆔 <b>Chat ID:</b> <code>${escapeTgHtml(tgConfig.adminChatId)}</code>\n` +
+        `🕒 <b>Vaqt:</b> ${escapeTgHtml(nowStr)}\n\n` +
+        `<i>Endi foydalanuvchilar ro'yxatdan o'tganda OTP kodlar va yangi kitob e'lonlari shu bot orqali yuboriladi.</i>`;
+      const plainMsg =
+        `✅ KitobUz Admin Panel: Telegram Bot muvaffaqiyatli ulandi!\n` +
+        `Bot: @${tgConfig.botUsername}\nChat ID: ${tgConfig.adminChatId}\nVaqt: ${nowStr}`;
+
+      const data = await sendTelegramMessageSafe(tgConfig.botToken, tgConfig.adminChatId, htmlMsg, plainMsg);
+      if (data.ok) {
+        fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-emerald-600 dark:text-emerald-400';
+        fbEl.textContent = `✅ Muvaffaqiyatli! Sinov xabari Telegram botingiz orqali (${tgConfig.adminChatId}) manziliga yetkazildi!`;
+        document.getElementById('tgStatusBadge').textContent = 'Ulangan ✓';
+        showToast('✈️ Telegram botga test xabar yetkazildi!');
+      } else {
+        fbEl.className = 'text-xs font-bold p-3 rounded-xl surface-input text-rose-500';
+        fbEl.textContent = `❌ Telegram API javobi: ${data.description || 'Token yoki Chat ID tekshiring (Botga /start bosilgan bo‘lishi shart)'}`;
+      }
+    }
+
+    function saveFirebaseConfig() {
+      fbConfig = {
+        dbUrl: document.getElementById('fbDbUrl').value.trim().replace(/\/$/, ''),
+        apiKey: document.getElementById('fbApiKey').value.trim(),
+        projectId: document.getElementById('fbProjectId').value.trim(),
+        appId: document.getElementById('fbAppId').value.trim()
+      };
+      localStorage.setItem('kitobuz_v6_fb', JSON.stringify(fbConfig));
+      updateFirebaseBadge();
+      showToast('🔥 Firebase Baza sozlamalari saqlandi!');
+    }
+
+    function updateFirebaseBadge() {
+      const badge = document.getElementById('fbStatusBadge');
+      if (fbConfig.dbUrl) {
+        badge.textContent = 'Firebase Cloud Ulangan';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold badge-audio';
+      } else {
+        badge.textContent = 'Lokal Xotira';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold badge-lang';
+      }
+    }
+
+    async function syncToFirebaseCloud() {
+      saveFirebaseConfig();
+      if (!fbConfig.dbUrl) {
+        showToast('Avval Firebase Realtime Database URL manzilini kiriting!');
+        return;
+      }
+      try {
+        const res = await fetch(`${fbConfig.dbUrl}/kitobuz_v6.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ books, genres, languages, updatedAt: new Date().toISOString() })
+        });
+        if (!res.ok) throw new Error('Sync error');
+        addNotification('☁️ Firebase Cloud Push', 'Katalog ma’lumotlari Firebase bulutli bazasiga saqlandi.');
+        showToast('Katalog Firebase bazasiga muvaffaqiyatli yuborildi!');
+      } catch (err) {
+        showToast('Firebase URL manzilini yoki Database Rules ruxsatini tekshiring.');
+      }
+    }
+
+    async function pullFromFirebaseCloud() {
+      saveFirebaseConfig();
+      if (!fbConfig.dbUrl) {
+        showToast('Avval Firebase Realtime Database URL manzilini kiriting!');
+        return;
+      }
+      try {
+        const res = await fetch(`${fbConfig.dbUrl}/kitobuz_v6.json`);
+        const data = await res.json();
+        if (data && Array.isArray(data.books)) {
+          books = data.books;
+          if (data.genres) genres = data.genres;
+          if (data.languages) languages = data.languages;
+          saveBooksToStorage();
+          renderFilters();
+          renderCatalog();
+          renderAdminTables();
+          showToast('Ma’lumotlar Firebase-dan muvaffaqiyatli yuklab olindi!');
+        } else {
+          showToast('Firebase bazasida saqlangan katalog topilmadi.');
+        }
+      } catch (err) {
+        showToast('Firebase-dan yuklashda xatolik yuz berdi.');
+      }
+    }
+
+    function sendAdminBroadcastNotification() {
+      const title = document.getElementById('broadcastTitleInput').value.trim();
+      const body = document.getElementById('broadcastBodyInput').value.trim();
+      if (!title || !body) {
+        showToast('Bildirishnoma sarlavhasi va matnini kiriting!');
+        return;
+      }
+      addNotification(`📣 ${title}`, body);
+      document.getElementById('broadcastTitleInput').value = '';
+      document.getElementById('broadcastBodyInput').value = '';
+      showToast('Bildirishnoma barcha foydalanuvchilarga yuborildi!');
+    }
+
+    function updateAdminCredentials() {
+      const login = document.getElementById('adminNewLogin').value.trim();
+      const pass = document.getElementById('adminNewPass').value.trim();
+      if (!login || !pass) {
+        showToast('Yangi login va parolni kiriting!');
+        return;
+      }
+      adminCreds = { login, pass };
+      localStorage.setItem('kitobuz_v6_admin', JSON.stringify(adminCreds));
+      document.getElementById('adminNewPass').value = '';
+      showToast('🔐 Admin login va paroli yangilandi!');
+    }
+
+    // 11. MOBILE DRAWER & TOAST HELPERS
+    function toggleMobileSidebar() {
+      const sb = document.getElementById('filterSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      const isHidden = sb.classList.contains('-translate-x-full');
+      sb.classList.toggle('-translate-x-full', !isHidden);
+      bd.classList.toggle('hidden', !isHidden);
+    }
+
+    function toggleAccordion(id) {
+      document.getElementById(id).classList.toggle('hidden');
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'surface-panel px-4 py-3 rounded-2xl border-l-4 border-l-sky-600 text-xs font-extrabold text-main shadow-xl pointer-events-auto transition-all duration-300';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
